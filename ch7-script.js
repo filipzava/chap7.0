@@ -12,6 +12,28 @@ function getWebflowStory(slug) {
 const store = {};
 window.store = store;
 
+
+
+function onboardingHook({steps, currrent, index}) {
+  console.log({ currrentStep: currrent, index });
+  if (index === 0) {
+    fetchHealthProviders();
+    fetchPricing();
+    fetchContraindications();
+  } else if (index === 1) {
+    populateCourses(); 
+  } else if (index === 2) {
+    getSelectedCourses();
+    populateOnboardingSurvey();
+  } else if (index === 3) {
+    getCheckedSurveyAnswers();
+    populateSummary();
+  } else if (index === 4) {
+    populateContraindications();
+  }
+}
+
+
 async function fetchHealthProviders() {
   try {
     const response = await fetch(getDocumentFromFireBase("healthProviders"));
@@ -240,21 +262,35 @@ function fillSummaryStepData() {
   coursesCountElement.innerHTML = window.store.selectedCourses.length;
 }
 
-fetchHealthProviders();
-fetchPricing();
-fetchContraindications();
 
 
+function populateContraindications() {
+  const container = document.querySelector(".dropdown_contain");
 
-function onboardingHook({steps, currrentStep, index}) {
-  console.log(steps, currrentStep, index);
-  if (index === 1) {
-    populateCourses(); 
-  } else if (index === 2) {
-    getSelectedCourses();
-    populateOnboardingSurvey();
-  } else if (index === 3) {
-    getCheckedSurveyAnswers();
-    populateSummary();
-  } 
+  const filteredCourses = window.store.courses.filter((course) =>
+    window.store.selectedCourses.includes(course.slug)
+  );
+
+  filteredCourses.forEach((course) => {
+    const item = renderContraindicationItem(course.slug, course.name, window.store.contraindications.filter((contraindication) => contraindication.course_slug === course.slug));
+    container.appendChild(item);
+  });
 }
+
+function renderContraindicationItem(slug, name, contraindications) {
+  const template = document.createElement("template");
+  template.innerHTML = `
+    <div class="dropdown_content">
+      <div class="program_name">Programm: ${name}</div>
+      <ul role="list" class="program_list">
+        ${contraindications.map((contraindication) => `<li class="program_list_item">${contraindication.contraindication}</li>`).join("")}
+      </ul>
+    </div>`;
+  return template.content.firstElementChild;
+}
+
+
+
+
+
+
