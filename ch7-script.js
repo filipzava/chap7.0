@@ -265,7 +265,7 @@ function fillSummaryStepData() {
 
 
 function populateContraindications() {
-  const container = document.querySelector(".dropdown_contain");
+  const container = document.querySelector(".dropdown_padding");
 
   const filteredCourses = window.store.courses.filter((course) =>
     window.store.selectedCourses.includes(course.slug)
