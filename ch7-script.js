@@ -1,9 +1,12 @@
 function getDocumentFromFireBase(document) {
-  return `https://us-central1-mind-c3055.cloudfunctions.net/webflowAPI/getConfigData?document=${document}`;
+  // eslint-disable-next-line no-undef
+  return `${API}/getConfigData?document=${document}`;
 }
 
+
 function getWebflowStory(slug) {
-  return `https://us-central1-mind-c3055.cloudfunctions.net/webflowAPI/getWebflowStory?slug=${slug}&draft=true`;
+  // eslint-disable-next-line no-undef
+  return `${API}/getWebflowStory?slug=${slug}&draft=true`;
 }
 
 const store = {};
@@ -240,3 +243,18 @@ function fillSummaryStepData() {
 fetchHealthProviders();
 fetchPricing();
 fetchContraindications();
+
+
+
+function onboardingHook({steps, currrentStep, index}) {
+  console.log(steps, currrentStep, index);
+  if (index === 1) {
+    populateCourses(); 
+  } else if (index === 2) {
+    getSelectedCourses();
+    populateOnboardingSurvey();
+  } else if (index === 3) {
+    getCheckedSurveyAnswers();
+    populateSummary();
+  } 
+}
