@@ -452,13 +452,17 @@ async function createUser() {
     });
 
     const data = await response.json();
-    
+    console.log(response, data);
+    window.store.createUserResponse = data;
+    window.store.userId = data.status;
     if (!response.ok) {
+      window.store.createUserResponse = data
       throw new Error(data.message || 'Failed to create user');
     }
 
     return data;
   } catch (error) {
+    window.store.createUserResponse = error;
     console.error('Error creating user:', error);
     throw error;
   }
