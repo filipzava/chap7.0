@@ -382,10 +382,10 @@ function handleFormSubmission(event) {
     submitButton.disabled = false;
     return;
   }
-  console.log(window.store.formData);
-  return;
+  
+  
   // Call createUser with the form data from store
-  createUser(window.store.formData)
+  createUser()
     .catch(error => {
       console.error('Error creating user:', error);
       // Handle error (show error message to user)
@@ -396,8 +396,9 @@ function handleFormSubmission(event) {
 }
 
 // Add this function to create the user
-async function createUser(userData) {
+async function createUser() {
   try {
+    const userData = window.store.userData;
     // Format the courses data
     const paidCourses = window.store.selectedCourses.map(course => {
       const validTill = new Date();
@@ -440,6 +441,8 @@ async function createUser(userData) {
       }
     };
 
+    console.log(payload);
+    
     const response = await fetch(getCreateUserBaseUrl(), {
       method: 'POST',
       headers: {
@@ -551,7 +554,7 @@ function getFormData() {
   });
 
   if (isValid) {
-    window.store.formData = formData;
+    window.store.userData = formData;
   }
 
   return isValid;
