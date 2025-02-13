@@ -333,7 +333,7 @@ function populateCheckout() {
   const priceNew = filteredCourses.length === 2 ? Number(window.store.pricing.twoCoursesPrice) / 2 : window.store.pricing.singleCoursePrice; 
 
   filteredCourses.forEach((course) => {
-    const item = renderCheckoutCourseItem( "https://cdn.prod.website-files.com/676e8e3a573b707f2be07685/677d7fc464ea793a4794a3a2_image%20112.webp", course.name, course.description, String(priceOld)+CURRENCY, priceNew, course.slug, course.course_color);
+    const item = renderCheckoutCourseItem( "https://cdn.prod.website-files.com/676e8e3a573b707f2be07685/677d7fc464ea793a4794a3a2_image%20112.webp", course.name, course.description, String(priceOld)+ priceOld ? CURRENCY : "", priceNew, course.slug, course.course_color);
     container.appendChild(item);
   });
   totalContainer.innerHTML = (Number(priceNew)*filteredCourses.length).toFixed(2)+CURRENCY;
