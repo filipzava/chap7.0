@@ -487,14 +487,12 @@ function getFormData() {
 
   // Get form fields
   const fields = {
-    firstName: form.querySelector('input[name="firstName"]'),
-    lastName: form.querySelector('input[name="lastName"]'),
-    email: form.querySelector('input[name="email"]'),
-    phone: form.querySelector('input[name="phone"]'),
-    street: form.querySelector('input[name="street"]'),
-    houseNumber: form.querySelector('input[name="houseNumber"]'),
-    zipCode: form.querySelector('input[name="zipCode"]'),
-    city: form.querySelector('input[name="city"]')
+    namePrefix: form.querySelector('select[id="namePrefix"]'),
+    firstName: form.querySelector('input[id="firstName"]'),
+    lastName: form.querySelector('input[id="lastName"]'),
+    dateOfBirth: form.querySelector('input[id="dateOfBirth"]'),
+    email: form.querySelector('input[id="email"]'),
+    password: form.querySelector('input[name="password"]')
   };
 
   // Clear previous error states
@@ -529,19 +527,23 @@ function getFormData() {
       }
     }
 
-    // Phone validation (optional field)
-    if (key === 'phone' && value) {
-      const phoneRegex = /^[+\d\s-()]{6,}$/;
-      if (!phoneRegex.test(value)) {
+    // Password validation
+    if (key === 'password' && value) {
+      if (value.length < 6) { // minimum 6 characters
         field.classList.add('error');
         isValid = false;
       }
     }
 
-    // Zip code validation
-    if (key === 'zipCode' && value) {
-      const zipRegex = /^\d{4,5}$/;
-      if (!zipRegex.test(value)) {
+    // Date of birth validation
+    if (key === 'dateOfBirth' && value) {
+      const date = new Date(value);
+      const today = new Date();
+      const minAge = 18;
+      const minDate = new Date();
+      minDate.setFullYear(today.getFullYear() - minAge);
+      
+      if (isNaN(date.getTime()) || date > today || date > minDate) {
         field.classList.add('error');
         isValid = false;
       }
