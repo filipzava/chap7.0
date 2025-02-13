@@ -14,8 +14,24 @@ function getWebflowStory(slug) {
   return `${API}/getWebflowStory?slug=${slug}&draft=true`;
 }
 
-const store = {};
-window.store = store;
+// Add these helper functions
+function getFromStorage(key, defaultValue = null) {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (e) {
+    console.error(`Error reading ${key} from localStorage:`, e);
+    return defaultValue;
+  }
+}
+
+function setToStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error(`Error writing ${key} to localStorage:`, e);
+  }
+}
 
 const CURRENCY = "€";
 
@@ -65,7 +81,7 @@ async function fetchHealthProviders() {
     const data = await response.json();
 
     if (data.success && Object.keys(data.data).length > 0) {
-      window.store.healthProviders = data.data;
+      setToStorage('healthProviders', data.data);
       populateDropdown(Object.keys(data.data));
     } else {
       console.error("Invalid response structure:", data);
@@ -93,9 +109,9 @@ function populateDropdown(providers) {
   function handleDropdownChange(event) {
     const selectedProvider = event.target.value;
     dropdown.value = selectedProvider;
-    store.selectedHealtProvider = selectedProvider;
-    document.querySelector("#takeover").innerHTML =
-      window.store.healthProviders[selectedProvider].takeover;
+    setToStorage('selectedHealtProvider', selectedProvider);
+    const healthProviders = getFromStorage('healthProviders', {});
+    document.querySelector("#takeover").innerHTML = healthProviders[selectedProvider].takeover;
   }
 
   // Enable dropdown after populating options
@@ -110,7 +126,7 @@ async function fetchPricing() {
     const data = await res.json();
 
     if (data.success && data.data) {
-      window.store.pricing = data.data;
+      setToStorage('pricing', data.data);
     }
   } catch (error) {
     console.error(error);
@@ -123,7 +139,7 @@ async function fetchContraindications() {
     const data = await res.json();
     const healthContraindications = data.story?.content?.contraindications;
     if (healthContraindications) {
-      window.store.contraindications = healthContraindications;
+      setToStorage('contraindications', healthContraindications);
     }
   } catch (error) {
     console.error(error);
@@ -131,8 +147,8 @@ async function fetchContraindications() {
 }
 
 function getFilteredContraindications() {
-  const selectedCourses = window.store.selectedCourses;
-  const contraindications = window.store.contraindications;
+  const selectedCourses = getFromStorage('selectedCourses', []);
+  const contraindications = getFromStorage('contraindications', []);
   return contraindications.filter((contraindication) =>
     selectedCourses.includes(contraindication.course_slug)
   );
@@ -144,7 +160,7 @@ async function populateCourses() {
   const data = await res.json();
 
   if (data.success && data.data["courses-info"].length) {
-    window.store.courses = data.data["courses-info"];
+    setToStorage('courses', data.data["courses-info"]);
     const container = document.querySelector("#coursesContainer");
     container.innerHTML = "";
     data.data["courses-info"].forEach((data) => {
@@ -191,7 +207,7 @@ function getSelectedCourses() {
   const selectedCourses = Array.from(selectedCheckboxes).map((checkbox) =>
     checkbox.getAttribute("data-value")
   );
-  window.store.selectedCourses = selectedCourses;
+  setToStorage('selectedCourses', selectedCourses);
 }
 
 function renderOnboardingSurveyItem(id, type, text) {
@@ -207,12 +223,12 @@ function renderOnboardingSurveyItem(id, type, text) {
 
 async function populateOnboardingSurvey() {
   const res = await fetch(getWebflowStory("onboarding-survey"));
-  const selectedCourses = window.store.selectedCourses ?? [];
+  const selectedCourses = getFromStorage('selectedCourses', []);
   const data = await res.json();
   const surveyData =
     data?.story?.content?.onboarding_survey_steps?.[1]?.answers;
   if (surveyData.length) {
-    window.store.onboardingSurvey = surveyData;
+    setToStorage('onboardingSurvey', surveyData);
     const container = document.querySelector("#onboardingSurvey");
     container.innerHTML = "";
     surveyData
@@ -232,7 +248,7 @@ function getCheckedSurveyAnswers() {
   const surveyAnswers = Array.from(selectedCheckboxes).map(
     (checkbox) => checkbox.id
   );
-  window.store.onboardingSurveyAnswers = surveyAnswers;
+  setToStorage('onboardingSurveyAnswers', surveyAnswers);
 }
 
 function renderCardResult(imageSrc, title, text, color) {
@@ -260,37 +276,43 @@ function renderCardResult(imageSrc, title, text, color) {
 
 function populateSummary() {
   const container = document.querySelector("#summary");
-  const filteredCourses = window.store.courses.filter((course) =>
-    window.store.selectedCourses.includes(course.slug)
-  );
+  const filteredCourses = getFromStorage('courses', []);
+  const selectedCourses = getFromStorage('selectedCourses', []);
   filteredCourses.forEach((course) => {
-    container.prepend(
-      renderCardResult(
-        "https://cdn.prod.website-files.com/676e8e3a573b707f2be07685/677d7fc464ea793a4794a3a2_image%20112.webp",
-        course.name,
-        course.recommendation_description,
-        course.course_color
-      )
-    );
+    if (selectedCourses.includes(course.slug)) {
+      container.prepend(
+        renderCardResult(
+          "https://cdn.prod.website-files.com/676e8e3a573b707f2be07685/677d7fc464ea793a4794a3a2_image%20112.webp",
+          course.name,
+          course.recommendation_description,
+          course.course_color
+        )
+      );
+    }
   });
   fillSummaryStepData();
 }
 
 function fillSummaryStepData() {
   const takeoverSummary = document.querySelector("#takeoverSummary");
+  const selectedHealtProvider = getFromStorage('selectedHealtProvider', '');
+  const healthProviders = getFromStorage('healthProviders', {});
   takeoverSummary.innerHTML =
-    window.store.healthProviders[window.store.selectedHealtProvider].takeover;
+    healthProviders[selectedHealtProvider].takeover;
 
   const price = document.querySelector("#price");
 
-  if (window.store.selectedCourses.length === 1) {
-    price.innerHTML = window.store.pricing.singleCoursePrice + CURRENCY;
-  } else if (window.store.selectedCourses.length === 2) {
-    price.innerHTML = window.store.pricing.twoCoursesPrice + CURRENCY;
+  const selectedCourses = getFromStorage('selectedCourses', []);
+  if (selectedCourses.length === 1) {
+    const pricing = getFromStorage('pricing', {});
+    price.innerHTML = pricing.singleCoursePrice + CURRENCY;
+  } else if (selectedCourses.length === 2) {
+    const pricing = getFromStorage('pricing', {});
+    price.innerHTML = pricing.twoCoursesPrice + CURRENCY;
   }
 
   const coursesCountElement = document.querySelector("#coursesCount");
-  coursesCountElement.innerHTML = window.store.selectedCourses.length;
+  coursesCountElement.innerHTML = selectedCourses.length;
 }
 
 
@@ -298,13 +320,21 @@ function fillSummaryStepData() {
 function populateContraindications() {
   const container = document.querySelector(".dropdown_padding");
 
-  const filteredCourses = window.store.courses.filter((course) =>
-    window.store.selectedCourses.includes(course.slug)
-  );
+  const filteredCourses = getFromStorage('courses', []);
+  const selectedCourses = getFromStorage('selectedCourses', []);
+  const contraindications = getFromStorage('contraindications', []);
 
   filteredCourses.forEach((course) => {
-    const item = renderContraindicationItem(course.slug, course.name, window.store.contraindications.filter((contraindication) => contraindication.course_slug === course.slug));
-    container.appendChild(item);
+    if (selectedCourses.includes(course.slug)) {
+      const item = renderContraindicationItem(
+        course.slug, 
+        course.name, 
+        contraindications.filter((contraindication) => 
+          contraindication.course_slug === course.slug
+        )
+      );
+      container.appendChild(item);
+    }
   });
 }
 
@@ -325,18 +355,27 @@ function renderContraindicationItem(slug, name, contraindications) {
 function populateCheckout() {
   const container = document.querySelector("#productList");
   const totalContainer = document.querySelector("#priceTotal");
-  const filteredCourses = window.store.courses.filter((course) =>
-    window.store.selectedCourses.includes(course.slug)
-  );
+  const filteredCourses = getFromStorage('courses', []);
+  const selectedCourses = getFromStorage('selectedCourses', []);
 
-  const priceOld = filteredCourses.length === 2 ? Number(window.store.pricing.singleCoursePrice) : "";
-  const priceNew = filteredCourses.length === 2 ? Number(window.store.pricing.twoCoursesPrice) / 2 : window.store.pricing.singleCoursePrice; 
+  const priceOld = selectedCourses.length === 2 ? Number(getFromStorage('pricing', {}).singleCoursePrice) : "";
+  const priceNew = selectedCourses.length === 2 ? Number(getFromStorage('pricing', {}).twoCoursesPrice) / 2 : getFromStorage('pricing', {}).singleCoursePrice; 
 
   filteredCourses.forEach((course) => {
-    const item = renderCheckoutCourseItem( "https://cdn.prod.website-files.com/676e8e3a573b707f2be07685/677d7fc464ea793a4794a3a2_image%20112.webp", course.name, course.description, String(priceOld)+ priceOld ? CURRENCY : "", priceNew, course.slug, course.course_color);
-    container.appendChild(item);
+    if (selectedCourses.includes(course.slug)) {
+      const item = renderCheckoutCourseItem(
+        "https://cdn.prod.website-files.com/676e8e3a573b707f2be07685/677d7fc464ea793a4794a3a2_image%20112.webp",
+        course.name,
+        course.description,
+        String(priceOld)+ priceOld ? CURRENCY : "",
+        priceNew,
+        course.slug,
+        course.course_color
+      );
+      container.appendChild(item);
+    }
   });
-  totalContainer.innerHTML = (Number(priceNew)*filteredCourses.length).toFixed(2)+CURRENCY;
+  totalContainer.innerHTML = (Number(priceNew)*selectedCourses.length).toFixed(2)+CURRENCY;
 }
 
 
@@ -397,9 +436,14 @@ function handleFormSubmission(event) {
 // Add this function to create the user
 async function createUser() {
   try {
-    const userData = window.store.userData;
+    const userData = getFromStorage('userData', {});
+    const selectedCourses = getFromStorage('selectedCourses', []);
+    const selectedHealtProvider = getFromStorage('selectedHealtProvider', '');
+    const healthProviders = getFromStorage('healthProviders', {});
+    const onboardingSurveyAnswers = getFromStorage('onboardingSurveyAnswers', []);
+
     // Format the courses data
-    const paidCourses = window.store.selectedCourses.map(course => {
+    const paidCourses = selectedCourses.map(course => {
       const validTill = new Date();
       validTill.setFullYear(validTill.getFullYear() + 1);
       
@@ -411,7 +455,7 @@ async function createUser() {
     });
 
     // Get health provider data
-    const healthProviderData = window.store.healthProviders[window.store.selectedHealtProvider];
+    const healthProviderData = healthProviders[selectedHealtProvider];
 
     // Check if user has any contraindications for their selected courses
     const hasContraindications = getFilteredContraindications().length > 0;
@@ -426,22 +470,21 @@ async function createUser() {
       hasPreconditions: hasContraindications,
       healthProvider: {
         maxCoursePrice: healthProviderData.maxCoursePrice || "",
-        name: window.store.selectedHealtProvider,
-        numberOfCourses: window.store.selectedCourses.length.toString(),
+        name: selectedHealtProvider,
+        numberOfCourses: selectedCourses.length.toString(),
         takeover: healthProviderData.takeover || ""
       },
       paidCourses: paidCourses,
-      selectedCourses: window.store.selectedCourses.map(course => course.toUpperCase()),
+      selectedCourses: selectedCourses.map(course => course.toUpperCase()),
       onboarding: {
         answers: {
-          step1: window.store.selectedCourses.map(course => course.toUpperCase()),
-          step2: window.store.onboardingSurveyAnswers || [],
+          step1: selectedCourses.map(course => course.toUpperCase()),
+          step2: onboardingSurveyAnswers || [],
         }
       }
     };
 
-    
-    window.store.createUserPayload = payload;
+    setToStorage('createUserPayload', payload);
     
     const response = await fetch(getCreateUserBaseUrl(), {
       method: 'POST',
@@ -453,16 +496,16 @@ async function createUser() {
 
     const data = await response.json();
     
-    window.store.createUserResponse = data;
-    window.store.userId = data.userId;
+    setToStorage('createUserResponse', data);
+    setToStorage('userId', data.userId);
+    
     if (!response.ok) {
-      window.store.createUserResponse = data
       throw new Error(data.message || 'Failed to create user');
     }
 
     return data;
   } catch (error) {
-    window.store.createUserResponse = error;
+    setToStorage('createUserResponse', error);
     console.error('Error creating user:', error);
     throw error;
   }
@@ -557,7 +600,7 @@ function getFormData() {
   });
 
   if (isValid) {
-    window.store.userData = formData;
+    setToStorage('userData', formData);
   }
 
   return isValid;
