@@ -752,7 +752,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }
 
           if (key === "consent1" && value) {
-            if (!value.checked) {
+            if (value !== "on") {
               field.classList.add("error");
               valid = false;
               errorMessages.push(
@@ -762,7 +762,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }
 
           if (key === "privacyPolicy" && value) {
-            if (!value.checked) {
+            if (value !== "on") {
               field.classList.add("error");
               valid = false;
 
