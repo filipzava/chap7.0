@@ -1,6 +1,8 @@
 const PUBLISHABLE_KEY =
   "pk_live_51QPhSmIjMlCwpKLp1WUFFigtGme2DlhNm5Q92hVgaOXZ9LykdGitlL5TV4PyaMjO2rJcG2T22G5bdCYCis5KwnQs00AcDCV5VD";
 
+let stripe; // Declare stripe variable at the top level
+
 /* eslint-disable no-case-declarations */
 function getDocumentFromFireBase(document) {
   // eslint-disable-next-line no-undef
@@ -440,8 +442,36 @@ function renderCheckoutCourseItem(
   return template.content.firstElementChild;
 }
 
+// Add this function to initialize Stripe
+async function initializeStripe() {
+  if (typeof Stripe === 'undefined') {
+    // Load Stripe.js if it hasn't been loaded
+    const script = document.createElement('script');
+    script.src = 'https://js.stripe.com/v3/';
+    script.async = true;
+    document.head.appendChild(script);
+    
+    // Wait for script to load
+    await new Promise((resolve) => {
+      script.onload = resolve;
+    });
+  }
+  
+  // Initialize Stripe with your publishable key
+  // eslint-disable-next-line no-undef
+  stripe = Stripe(PUBLISHABLE_KEY);
+  console.log(stripe);
+  return stripe;
+}
+
+// Modify the doPayment function
 async function doPayment(amount) {
   try {
+    // Initialize Stripe if not already initialized
+    if (!stripe) {
+      await initializeStripe();  
+    }
+
     const userData = getFromStorage("userData", {});
     const response = await fetch(
       "https://us-central1-mind-c3055.cloudfunctions.net/createPaymentIntent",
@@ -454,14 +484,13 @@ async function doPayment(amount) {
       }
     );
     const { paymentIntent } = await response.json();
-    // eslint-disable-next-line no-undef
-    const stripe = Stripe(PUBLISHABLE_KEY);
+    
     await stripe.initPaymentSheet({
       paymentIntentClientSecret: paymentIntent,
       defaultBillingDetails: {
         email: userData.email,
         name: userData.firstName + " " + userData.lastName,
-        address: { country: "DE" }, // TODO: get country from userData
+        address: { country: "DE" },
       },
       merchantDisplayName: "7 Mind Courses",
       allowsDelayedPaymentMethods: false,
@@ -471,9 +500,10 @@ async function doPayment(amount) {
     const { error, paymentMethod } = await stripe.presentPaymentSheet();
     if (error) {
       console.error("Payment failed:", error);
-      
+      throw error;
     } else {
       console.log("Payment successful!", paymentMethod);
+      return paymentMethod;
     }
   } catch (error) {
     console.error("Error creating payment:", error);
@@ -660,11 +690,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       case 5:
         const form = document.getElementById("signUpForm");
-        // Add preventDefault to stop the default form submission
-        form.addEventListener('submit', (e) => {
-          e.preventDefault();
-          return false;
-        });
+      
         
         const fields = {
           namePrefix: form.querySelector('select[name="namePrefix"]'),
@@ -676,7 +702,7 @@ document.addEventListener("DOMContentLoaded", function () {
           consent1: form.querySelector('input[name="consent1"]'),
           privacyPolicy: form.querySelector('input[name="privacyPolicy"]'),
         };
-        console.log(fields);
+        
         const formData = {};
 
         // Clear previous error states
@@ -855,4 +881,6 @@ document.addEventListener("DOMContentLoaded", function () {
     e.preventDefault();
     return false;
   }, true);
+
+  
 });
