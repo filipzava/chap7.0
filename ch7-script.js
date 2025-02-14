@@ -92,7 +92,7 @@ async function fetchHealthProviders() {
 
 function populateDropdown(providers) {
   const dropdown = document.querySelector("#healthProviders");
-
+  const disclaimer = document.querySelector(".input_disclaimer");
   // Set disabled state initially
   dropdown.disabled = true;
 
@@ -108,6 +108,7 @@ function populateDropdown(providers) {
   function handleDropdownChange(event) {
     const selectedProvider = event.target.value;
     dropdown.value = selectedProvider;
+    disclaimer.style.visibility = "visible";
     setToStorage("selectedHealthProvider", selectedProvider);
     const healthProviders = getFromStorage("healthProviders", {});
     document.querySelector("#takeover").innerHTML =
