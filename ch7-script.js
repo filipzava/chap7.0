@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 function getDocumentFromFireBase(document) {
   // eslint-disable-next-line no-undef
   return `${API}/getConfigData?document=${document}`;
@@ -7,7 +8,6 @@ function getCreateUserBaseUrl() {
   // eslint-disable-next-line no-undef
   return `${API}/createUser`;
 }
-
 
 function getWebflowStory(slug) {
   // eslint-disable-next-line no-undef
@@ -36,29 +36,29 @@ function setToStorage(key, value) {
 const CURRENCY = "€";
 
 function initializeFormListeners() {
-  const form = document.getElementById('signUpForm');
-  const submitButton = document.getElementById('registerFormSubmitButton');
-  
+  const form = document.getElementById("signUpForm");
+  const submitButton = document.getElementById("registerFormSubmitButton");
+
   // Remove existing event listeners if any
   if (form) {
-    form.removeEventListener('submit', handleFormSubmission);
-    form.addEventListener('submit', handleFormSubmission);
+    form.removeEventListener("submit", handleFormSubmission);
+    form.addEventListener("submit", handleFormSubmission);
   }
-  
+
   if (submitButton) {
-    submitButton.removeEventListener('click', handleFormSubmission);
-    submitButton.addEventListener('click', handleFormSubmission);
+    submitButton.removeEventListener("click", handleFormSubmission);
+    submitButton.addEventListener("click", handleFormSubmission);
   }
 }
 
-function onboardingHook({steps, currrent, index}) {
+function onboardingHook({ steps, currrent, index }) {
   console.log({ currrentStep: currrent, index });
   if (index === 0) {
     fetchHealthProviders();
     fetchPricing();
     fetchContraindications();
   } else if (index === 1) {
-    populateCourses(); 
+    populateCourses();
   } else if (index === 2) {
     getSelectedCourses();
     populateOnboardingSurvey();
@@ -74,14 +74,13 @@ function onboardingHook({steps, currrent, index}) {
   }
 }
 
-
 async function fetchHealthProviders() {
   try {
     const response = await fetch(getDocumentFromFireBase("healthProviders"));
     const data = await response.json();
 
     if (data.success && Object.keys(data.data).length > 0) {
-      setToStorage('healthProviders', data.data);
+      setToStorage("healthProviders", data.data);
       populateDropdown(Object.keys(data.data));
     } else {
       console.error("Invalid response structure:", data);
@@ -93,10 +92,10 @@ async function fetchHealthProviders() {
 
 function populateDropdown(providers) {
   const dropdown = document.querySelector("#healthProviders");
-  
+
   // Set disabled state initially
   dropdown.disabled = true;
-  
+
   dropdown.innerHTML = `<option value="">Bitte Krankenkasse wählen</option>`; // Default option
 
   providers.forEach((provider) => {
@@ -109,14 +108,15 @@ function populateDropdown(providers) {
   function handleDropdownChange(event) {
     const selectedProvider = event.target.value;
     dropdown.value = selectedProvider;
-    setToStorage('selectedHealthProvider', selectedProvider);
-    const healthProviders = getFromStorage('healthProviders', {});
-    document.querySelector("#takeover").innerHTML = healthProviders[selectedProvider].takeover;
+    setToStorage("selectedHealthProvider", selectedProvider);
+    const healthProviders = getFromStorage("healthProviders", {});
+    document.querySelector("#takeover").innerHTML =
+      healthProviders[selectedProvider].takeover;
   }
 
   // Enable dropdown after populating options
   dropdown.disabled = false;
-  
+
   dropdown.addEventListener("change", handleDropdownChange);
 }
 
@@ -126,7 +126,7 @@ async function fetchPricing() {
     const data = await res.json();
 
     if (data.success && data.data) {
-      setToStorage('pricing', data.data);
+      setToStorage("pricing", data.data);
     }
   } catch (error) {
     console.error(error);
@@ -139,7 +139,7 @@ async function fetchContraindications() {
     const data = await res.json();
     const healthContraindications = data.story?.content?.contraindications;
     if (healthContraindications) {
-      setToStorage('contraindications', healthContraindications);
+      setToStorage("contraindications", healthContraindications);
     }
   } catch (error) {
     console.error(error);
@@ -147,8 +147,8 @@ async function fetchContraindications() {
 }
 
 function getFilteredContraindications() {
-  const selectedCourses = getFromStorage('selectedCourses', []);
-  const contraindications = getFromStorage('contraindications', []);
+  const selectedCourses = getFromStorage("selectedCourses", []);
+  const contraindications = getFromStorage("contraindications", []);
   return contraindications.filter((contraindication) =>
     selectedCourses.includes(contraindication.course_slug)
   );
@@ -160,7 +160,7 @@ async function populateCourses() {
   const data = await res.json();
 
   if (data.success && data.data["courses-info"].length) {
-    setToStorage('courses', data.data["courses-info"]);
+    setToStorage("courses", data.data["courses-info"]);
     const container = document.querySelector("#coursesContainer");
     container.innerHTML = "";
     data.data["courses-info"].forEach((data) => {
@@ -207,7 +207,7 @@ function getSelectedCourses() {
   const selectedCourses = Array.from(selectedCheckboxes).map((checkbox) =>
     checkbox.getAttribute("data-value")
   );
-  setToStorage('selectedCourses', selectedCourses);
+  setToStorage("selectedCourses", selectedCourses);
 }
 
 function renderOnboardingSurveyItem(id, type, text) {
@@ -223,12 +223,12 @@ function renderOnboardingSurveyItem(id, type, text) {
 
 async function populateOnboardingSurvey() {
   const res = await fetch(getWebflowStory("onboarding-survey"));
-  const selectedCourses = getFromStorage('selectedCourses', []);
+  const selectedCourses = getFromStorage("selectedCourses", []);
   const data = await res.json();
   const surveyData =
     data?.story?.content?.onboarding_survey_steps?.[1]?.answers;
   if (surveyData.length) {
-    setToStorage('onboardingSurvey', surveyData);
+    setToStorage("onboardingSurvey", surveyData);
     const container = document.querySelector("#onboardingSurvey");
     container.innerHTML = "";
     surveyData
@@ -248,7 +248,7 @@ function getCheckedSurveyAnswers() {
   const surveyAnswers = Array.from(selectedCheckboxes).map(
     (checkbox) => checkbox.id
   );
-  setToStorage('onboardingSurveyAnswers', surveyAnswers);
+  setToStorage("onboardingSurveyAnswers", surveyAnswers);
 }
 
 function renderCardResult(imageSrc, title, text, color) {
@@ -276,8 +276,8 @@ function renderCardResult(imageSrc, title, text, color) {
 
 function populateSummary() {
   const container = document.querySelector("#summary");
-  const filteredCourses = getFromStorage('courses', []);
-  const selectedCourses = getFromStorage('selectedCourses', []);
+  const filteredCourses = getFromStorage("courses", []);
+  const selectedCourses = getFromStorage("selectedCourses", []);
   filteredCourses.forEach((course) => {
     if (selectedCourses.includes(course.slug)) {
       container.prepend(
@@ -295,19 +295,18 @@ function populateSummary() {
 
 function fillSummaryStepData() {
   const takeoverSummary = document.querySelector("#takeoverSummary");
-  const selectedHealthProvider = getFromStorage('selectedHealthProvider', '');
-  const healthProviders = getFromStorage('healthProviders', {});
-  takeoverSummary.innerHTML =
-    healthProviders[selectedHealthProvider].takeover;
+  const selectedHealthProvider = getFromStorage("selectedHealthProvider", "");
+  const healthProviders = getFromStorage("healthProviders", {});
+  takeoverSummary.innerHTML = healthProviders[selectedHealthProvider].takeover;
 
   const price = document.querySelector("#price");
 
-  const selectedCourses = getFromStorage('selectedCourses', []);
+  const selectedCourses = getFromStorage("selectedCourses", []);
   if (selectedCourses.length === 1) {
-    const pricing = getFromStorage('pricing', {});
+    const pricing = getFromStorage("pricing", {});
     price.innerHTML = pricing.singleCoursePrice + CURRENCY;
   } else if (selectedCourses.length === 2) {
-    const pricing = getFromStorage('pricing', {});
+    const pricing = getFromStorage("pricing", {});
     price.innerHTML = pricing.twoCoursesPrice + CURRENCY;
   }
 
@@ -315,22 +314,20 @@ function fillSummaryStepData() {
   coursesCountElement.innerHTML = selectedCourses.length;
 }
 
-
-
 function populateContraindications() {
   const container = document.querySelector(".dropdown_padding");
 
-  const filteredCourses = getFromStorage('courses', []);
-  const selectedCourses = getFromStorage('selectedCourses', []);
-  const contraindications = getFromStorage('contraindications', []);
+  const filteredCourses = getFromStorage("courses", []);
+  const selectedCourses = getFromStorage("selectedCourses", []);
+  const contraindications = getFromStorage("contraindications", []);
 
   filteredCourses.forEach((course) => {
     if (selectedCourses.includes(course.slug)) {
       const item = renderContraindicationItem(
-        course.slug, 
-        course.name, 
-        contraindications.filter((contraindication) => 
-          contraindication.course_slug === course.slug
+        course.slug,
+        course.name,
+        contraindications.filter(
+          (contraindication) => contraindication.course_slug === course.slug
         )
       );
       container.appendChild(item);
@@ -338,31 +335,48 @@ function populateContraindications() {
   });
 }
 
-
 function renderContraindicationItem(slug, name, contraindications) {
   const template = document.createElement("template");
   template.innerHTML = `
     <div class="dropdown_content">
       <div class="program_name">Programm: ${name}</div>
       <ul role="list" class="program_list">
-        ${contraindications.map((contraindication) => `<li class="program_list_item">${contraindication.contraindication}</li>`).join("")}
+        ${contraindications
+          .map(
+            (contraindication) =>
+              `<li class="program_list_item">${contraindication.contraindication}</li>`
+          )
+          .join("")}
       </ul>
     </div>`;
   return template.content.firstElementChild;
 }
 
-
 function populateCheckout() {
   const container = document.querySelector("#productList");
   const totalContainer = document.querySelector("#priceTotal");
-  const filteredCourses = getFromStorage('courses', []);
-  const selectedCourses = getFromStorage('selectedCourses', []);
+  const filteredCourses = getFromStorage("courses", []);
+  const selectedCourses = getFromStorage("selectedCourses", []);
 
-  const priceOld = selectedCourses.length === 2 ? Number(getFromStorage('pricing', {}).singleCoursePrice) : "";
-  const priceNew = selectedCourses.length === 2 ? Number(getFromStorage('pricing', {}).twoCoursesPrice) / 2 : getFromStorage('pricing', {}).singleCoursePrice; 
+  const priceOld =
+    selectedCourses.length === 2
+      ? Number(getFromStorage("pricing", {}).singleCoursePrice)
+      : "";
+  const priceNew =
+    selectedCourses.length === 2
+      ? Number(getFromStorage("pricing", {}).twoCoursesPrice) / 2
+      : getFromStorage("pricing", {}).singleCoursePrice;
 
   filteredCourses.forEach((course) => {
     if (selectedCourses.includes(course.slug)) {
+      const item = renderCheckoutItem(
+        course.name,
+        course.recommendation_description,
+        priceOld,
+        priceNew
+      );
+      container.appendChild(item);
+      /*
       const item = renderCheckoutCourseItem(
         "https://cdn.prod.website-files.com/676e8e3a573b707f2be07685/677d7fc464ea793a4794a3a2_image%20112.webp",
         course.name,
@@ -373,13 +387,24 @@ function populateCheckout() {
         course.course_color
       );
       container.appendChild(item);
+      */
     }
   });
-  totalContainer.innerHTML = (Number(priceNew)*selectedCourses.length).toFixed(2)+CURRENCY;
+  totalContainer.innerHTML =
+    (Number(priceNew) * selectedCourses.length).toFixed(2) + CURRENCY;
 }
 
+function renderCheckoutItem(title, badgeText, priceOld, priceNew) {}
 
-function renderCheckoutCourseItem(imageSrc, title, description, priceOld, priceNew, badgeText, badgeColor) {
+function renderCheckoutCourseItem(
+  imageSrc,
+  title,
+  description,
+  priceOld,
+  priceNew,
+  badgeText,
+  badgeColor
+) {
   const template = document.createElement("template");
   template.innerHTML = `
     <div class="card_product">
@@ -402,30 +427,27 @@ function renderCheckoutCourseItem(imageSrc, title, description, priceOld, priceN
   return template.content.firstElementChild;
 }
 
-
 // Add this new function to handle form submission
 function handleFormSubmission(event) {
   event.preventDefault();
-  
 
-  const submitButton = document.getElementById('registerFormSubmitButton');
-  
+  const submitButton = document.getElementById("registerFormSubmitButton");
+
   // Disable submit button to prevent double submission
   submitButton.disabled = true;
-  
+
   // Get and validate form data
   const isValid = getFormData();
-  
+
   if (!isValid) {
     submitButton.disabled = false;
     return;
   }
-  
-  
+
   // Call createUser with the form data from store
   createUser()
-    .catch(error => {
-      console.error('Error creating user:', error);
+    .catch((error) => {
+      console.error("Error creating user:", error);
       // Handle error (show error message to user)
     })
     .finally(() => {
@@ -436,21 +458,24 @@ function handleFormSubmission(event) {
 // Add this function to create the user
 async function createUser() {
   try {
-    const userData = getFromStorage('userData', {});
-    const selectedCourses = getFromStorage('selectedCourses', []);
-    const selectedHealthProvider = getFromStorage('selectedHealthProvider', '');
-    const healthProviders = getFromStorage('healthProviders', {});
-    const onboardingSurveyAnswers = getFromStorage('onboardingSurveyAnswers', []);
+    const userData = getFromStorage("userData", {});
+    const selectedCourses = getFromStorage("selectedCourses", []);
+    const selectedHealthProvider = getFromStorage("selectedHealthProvider", "");
+    const healthProviders = getFromStorage("healthProviders", {});
+    const onboardingSurveyAnswers = getFromStorage(
+      "onboardingSurveyAnswers",
+      []
+    );
 
     // Format the courses data
-    const paidCourses = selectedCourses.map(course => {
+    const paidCourses = selectedCourses.map((course) => {
       const validTill = new Date();
       validTill.setFullYear(validTill.getFullYear() + 1);
-      
+
       return {
         course: course.toUpperCase(),
         status: "valid",
-        validTill: validTill.toISOString().split('T')[0]
+        validTill: validTill.toISOString().split("T")[0],
       };
     });
 
@@ -472,57 +497,56 @@ async function createUser() {
         maxCoursePrice: healthProviderData.maxCoursePrice || "",
         name: selectedHealthProvider,
         numberOfCourses: selectedCourses.length.toString(),
-        takeover: healthProviderData.takeover || ""
+        takeover: healthProviderData.takeover || "",
       },
       paidCourses: paidCourses,
-      selectedCourses: selectedCourses.map(course => course.toUpperCase()),
+      selectedCourses: selectedCourses.map((course) => course.toUpperCase()),
       onboarding: {
         answers: {
-          step1: selectedCourses.map(course => course.toUpperCase()),
+          step1: selectedCourses.map((course) => course.toUpperCase()),
           step2: onboardingSurveyAnswers || [],
-        }
-      }
+        },
+      },
     };
 
-    setToStorage('createUserPayload', payload);
-    
+    setToStorage("createUserPayload", payload);
+
     const response = await fetch(getCreateUserBaseUrl(), {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     const data = await response.json();
-    
-    setToStorage('createUserResponse', data);
-    setToStorage('userId', data.userId);
-    
+
+    setToStorage("createUserResponse", data);
+    setToStorage("userId", data.userId);
+
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to create user');
+      throw new Error(data.message || "Failed to create user");
     }
 
     return data;
   } catch (error) {
-    setToStorage('createUserResponse', error);
-    console.error('Error creating user:', error);
+    setToStorage("createUserResponse", error);
+    console.error("Error creating user:", error);
     throw error;
   }
 }
 
-
 function populateNamePrefix() {
   const namePrefixSelect = document.querySelector('select[name="namePrefix"]');
-  const prefixes = ['Mr.', 'Mrs.'];
+  const prefixes = ["Mr.", "Mrs."];
   // Clear existing options except the first placeholder
   while (namePrefixSelect.options.length > 1) {
     namePrefixSelect.remove(1);
   }
 
   // Add new options
-  prefixes.forEach(prefix => {
-    const option = document.createElement('option');
+  prefixes.forEach((prefix) => {
+    const option = document.createElement("option");
     option.value = prefix;
     option.textContent = prefix;
     namePrefixSelect.appendChild(option);
@@ -530,7 +554,7 @@ function populateNamePrefix() {
 }
 
 function getFormData() {
-  const form = document.getElementById('signUpForm');
+  const form = document.getElementById("signUpForm");
   const formData = {};
   let isValid = true;
 
@@ -541,13 +565,13 @@ function getFormData() {
     lastName: form.querySelector('input[name="lastName"]'),
     dateOfBirth: form.querySelector('input[name="dateOfBirth"]'),
     email: form.querySelector('input[name="email"]'),
-    password: form.querySelector('input[name="password"]')
+    password: form.querySelector('input[name="password"]'),
   };
 
   // Clear previous error states
-  Object.values(fields).forEach(field => {
+  Object.values(fields).forEach((field) => {
     if (field) {
-      field.classList.remove('error');
+      field.classList.remove("error");
     }
   });
 
@@ -563,47 +587,226 @@ function getFormData() {
     formData[key] = value;
 
     if (!value) {
-      field.classList.add('error');
+      field.classList.add("error");
       isValid = false;
     }
 
     // Email validation
-    if (key === 'email' && value) {
+    if (key === "email" && value) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(value)) {
-        field.classList.add('error');
+        field.classList.add("error");
         isValid = false;
       }
     }
 
     // Password validation
-    if (key === 'password' && value) {
-      if (value.length < 6) { // minimum 6 characters
-        field.classList.add('error');
+    if (key === "password" && value) {
+      if (value.length < 6) {
+        // minimum 6 characters
+        field.classList.add("error");
         isValid = false;
       }
     }
 
     // Date of birth validation
-    if (key === 'dateOfBirth' && value) {
+    if (key === "dateOfBirth" && value) {
       const date = new Date(value);
       const today = new Date();
       const minAge = 18;
       const minDate = new Date();
       minDate.setFullYear(today.getFullYear() - minAge);
-      
+
       if (isNaN(date.getTime()) || date > today || date > minDate) {
-        field.classList.add('error');
+        field.classList.add("error");
         isValid = false;
       }
     }
   });
 
   if (isValid) {
-    setToStorage('userData', formData);
+    setToStorage("userData", formData);
   }
 
   return isValid;
 }
 
+document.addEventListener("DOMContentLoaded", function () {
+  const steps = document.querySelectorAll(
+    ".form_step_wrap .form_step, .form_step_popup"
+  );
+  const prevBtns = document.querySelectorAll("[data-btn-prev]");
+  const nextBtns = document.querySelectorAll("[data-btn-next]");
+  const submitBtn = document.querySelector("[data-btn-submit]");
+  const errorMessageStep2 = document.getElementById("error_message");
+  const errorMessageStep3 = document.getElementById("error_message_step3");
 
+  let currentStep = 0;
+
+  function showStep(index) {
+    steps.forEach((step) => {
+      step.classList.remove("active");
+      step.style.display = "none";
+    });
+
+    if (steps[index]) {
+      steps[index].classList.add("active");
+      steps[index].style.display = steps[index].classList.contains(
+        "form_step_popup"
+      )
+        ? "flex"
+        : "block";
+    } else {
+      console.error("Step index out of range:", index);
+    }
+    onboardingHook({ steps: steps, current: steps[index], index: index });
+  }
+
+  function validateCurrentStep() {
+    let valid = true;
+    let errorMessages = [];
+
+    switch (currentStep) {
+      case 0:
+        const dropdown = document.getElementById("healthProviders");
+        if (
+          !dropdown ||
+          dropdown.value.trim() === "" ||
+          dropdown.value === null
+        ) {
+          valid = false;
+          errorMessages.push("Please select an option from the dropdown.");
+        }
+        break;
+
+      case 1:
+        const checkboxesStep2 = document.querySelectorAll(
+          ".card_select_checkbox:checked"
+        );
+        if (checkboxesStep2.length < 1 || checkboxesStep2.length > 2) {
+          valid = false;
+          errorMessages.push("Please select 1 or 2 options.");
+        }
+        break;
+
+      case 2:
+        const checkboxesStep3 = document.querySelectorAll(
+          ".custom-checkbox-input:checked"
+        );
+        if (checkboxesStep3.length < 1 || checkboxesStep3.length > 2) {
+          valid = false;
+          errorMessages.push("Please select 1 or 2 options.");
+        }
+        break;
+
+      case 4:
+        const popupConsent1 = document.getElementById("popupConsent1");
+        const popupConsent2 = document.getElementById("popupConsent2");
+        if (!popupConsent1.checked || !popupConsent2.checked) {
+          valid = false;
+          errorMessages.push("Please agree to both terms before continuing.");
+        }
+        break;
+
+      case 5:
+        const nameInput = document.getElementById("name");
+        const emailInput = document.getElementById("email");
+        const paymentRadios = document.querySelectorAll(
+          'input[name="Payment"]'
+        );
+        const consentCheckbox = document.getElementById("zustimmung");
+
+        if (!nameInput.value.trim()) {
+          valid = false;
+          errorMessages.push("Please enter your name.");
+        }
+        if (
+          !emailInput.value.trim() ||
+          !/^\S+@\S+\.\S+$/.test(emailInput.value)
+        ) {
+          valid = false;
+          errorMessages.push("Please enter a valid email address.");
+        }
+        if (!Array.from(paymentRadios).some((radio) => radio.checked)) {
+          valid = false;
+          errorMessages.push("Please select a payment option.");
+        }
+        if (!consentCheckbox.checked) {
+          valid = false;
+          errorMessages.push("You must agree to the terms to continue.");
+        }
+        break;
+    }
+
+    if (!valid) {
+      if (currentStep === 1) {
+        errorMessageStep2.innerHTML = errorMessages.join("<br>");
+        errorMessageStep2.style.display = "block";
+      } else if (currentStep === 2) {
+        errorMessageStep3.innerHTML = errorMessages.join("<br>");
+        errorMessageStep3.style.display = "block";
+      }
+    } else {
+      errorMessageStep2.style.display = "none";
+      errorMessageStep3.style.display = "none";
+    }
+
+    return valid;
+  }
+
+  function handleNextClick(event) {
+    if (!validateCurrentStep()) {
+      event.preventDefault();
+      return;
+    }
+    if (currentStep < steps.length - 1) {
+      currentStep++;
+      showStep(currentStep);
+    }
+  }
+
+  function handlePrevClick(event) {
+    if (currentStep > 0) {
+      currentStep--;
+      showStep(currentStep);
+    }
+  }
+
+  function enforceCheckboxLimit(selector, errorElement) {
+    document.querySelectorAll(selector).forEach((checkbox) => {
+      checkbox.addEventListener("change", () => {
+        const checkedBoxes = document.querySelectorAll(`${selector}:checked`);
+        if (checkedBoxes.length > 2) {
+          errorElement.textContent = "You can select up to 2 options only.";
+          errorElement.style.display = "block";
+          checkbox.checked = false;
+          setTimeout(() => {
+            errorElement.style.display = "none";
+          }, 4000);
+        }
+      });
+    });
+  }
+
+  function attachEventListeners() {
+    [...nextBtns, submitBtn].forEach((btn) => {
+      btn.removeEventListener("click", handleNextClick);
+      btn.addEventListener("click", handleNextClick);
+    });
+
+    [...prevBtns].forEach((btn) => {
+      btn.removeEventListener("click", handlePrevClick);
+      btn.addEventListener("click", handlePrevClick);
+    });
+
+    enforceCheckboxLimit(".card_select_checkbox", errorMessageStep2);
+    enforceCheckboxLimit(".custom-checkbox-input", errorMessageStep3);
+  }
+
+  attachEventListeners();
+  showStep(currentStep);
+
+  document.querySelector("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+  });
+});
