@@ -394,7 +394,26 @@ function populateCheckout() {
     (Number(priceNew) * selectedCourses.length).toFixed(2) + CURRENCY;
 }
 
-function renderCheckoutItem(title, badgeText, priceOld, priceNew) {}
+function renderCheckoutItem(title, badgeText, priceOld, priceNew) {
+  return `
+    <div class="card_product_top">
+        <div class="product_name">${title}</div>
+        <div class="card_product_price">
+            ${
+              badgeText
+                ? `<div class="badge is-rabatt"><div><span id="rabatt">${badgeText}</span> Rabatt</div></div>`
+                : ""
+            }
+            <div class="price_text_new">${priceNew}€</div>
+            ${
+              priceOld
+                ? `<div class="price_text_full text-decoration-strikethrough">${priceOld}€</div>`
+                : ""
+            }
+        </div>
+    </div>
+  `;
+}
 
 function renderCheckoutCourseItem(
   imageSrc,
