@@ -489,9 +489,6 @@ async function doPayment(amount) {
     );
 
     const data = await response.json();
-    
-    // Log the full response to see its structure
-    console.log('Full Payment Intent Response:', data);
 
     if (!response.ok) {
       throw new Error(data.message || 'Failed to create payment intent');
@@ -546,6 +543,7 @@ async function doPayment(amount) {
     const submitButton = document.createElement('button');
     submitButton.type = 'submit';
     submitButton.textContent = 'Pay now';
+    submitButton.classList.add('btn', 'btn-primary', "g_clickable_btn", "btn_main_wrap");
     submitButton.id = 'submit-payment';
 
     form.appendChild(paymentContainer);
@@ -574,7 +572,7 @@ async function doPayment(amount) {
         const { error } = await stripe.confirmPayment({
           elements,
           confirmParams: {
-            return_url: window.location.href,
+            return_url: window.location.href + "/vielen-dank",
             payment_method_data: {
               billing_details: {
                 name: `${userData.firstName} ${userData.lastName}`,
