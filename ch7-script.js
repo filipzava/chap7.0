@@ -1,5 +1,5 @@
 const PUBLISHABLE_KEY =
-"pk_test_51QPhSmIjMlCwpKLpOSWig7J6FCQyFQ5NEysG3mXGy5tzXfZ61wwdGDSU2m6qPO8QwWeUMokteES3SyTUJlqJF6JP00zRyrYPId";
+  "pk_test_51QPhSmIjMlCwpKLpOSWig7J6FCQyFQ5NEysG3mXGy5tzXfZ61wwdGDSU2m6qPO8QwWeUMokteES3SyTUJlqJF6JP00zRyrYPId";
 
 let stripe; // Declare stripe variable at the top level
 
@@ -289,18 +289,10 @@ function fillSummaryStepData() {
   takeoverSummary.innerHTML = healthProviders[selectedHealthProvider].takeover;
 
   const price = document.querySelector("#price");
-
-  const selectedCourses = getFromStorage("selectedCourses", []);
-  if (selectedCourses.length === 1) {
-    const pricing = getFromStorage("pricing", {});
-    price.innerHTML = pricing.singleCoursePrice + CURRENCY;
-  } else if (selectedCourses.length === 2) {
-    const pricing = getFromStorage("pricing", {});
-    price.innerHTML = pricing.twoCoursesPrice + CURRENCY;
-  }
+  price.innerHTML = calculateTotalPrice() + CURRENCY;
 
   const coursesCountElement = document.querySelector("#coursesCount");
-  coursesCountElement.innerHTML = selectedCourses.length;
+  coursesCountElement.innerHTML = getFromStorage("selectedCourses", []).length;
 }
 
 function populateContraindications() {
@@ -341,20 +333,29 @@ function renderContraindicationItem(slug, name, contraindications) {
   return template.content.firstElementChild;
 }
 
+function calculateTotalPrice() {
+  const pricing = getFromStorage("pricing", {});
+  const selectedCourses = getFromStorage("selectedCourses", []);
+  
+  if (selectedCourses.length === 2) {
+    return Number(pricing.twoCoursesPrice);
+  } else if (selectedCourses.length === 1) {
+    return Number(pricing.singleCoursePrice);
+  }
+  return 0;
+}
+
 function populateCheckout() {
   const container = document.querySelector("#productList");
   const totalContainer = document.querySelector("#priceTotal");
   const filteredCourses = getFromStorage("courses", []);
   const selectedCourses = getFromStorage("selectedCourses", []);
+  const pricing = getFromStorage("pricing", {});
 
-  const priceOld =
-    selectedCourses.length === 2
-      ? Number(getFromStorage("pricing", {}).singleCoursePrice)
-      : "";
-  const priceNew =
-    selectedCourses.length === 2
-      ? Number(getFromStorage("pricing", {}).twoCoursesPrice) / 2
-      : getFromStorage("pricing", {}).singleCoursePrice;
+  const priceOld = selectedCourses.length === 2 ? Number(pricing.singleCoursePrice) : "";
+  const priceNew = selectedCourses.length === 2 
+    ? Number(pricing.twoCoursesPrice) / 2 
+    : Number(pricing.singleCoursePrice);
 
   filteredCourses.forEach((course) => {
     if (selectedCourses.includes(course.slug)) {
@@ -365,22 +366,10 @@ function populateCheckout() {
         priceNew
       );
       container.appendChild(item);
-      /*
-      const item = renderCheckoutCourseItem(
-        "https://cdn.prod.website-files.com/676e8e3a573b707f2be07685/677d7fc464ea793a4794a3a2_image%20112.webp",
-        course.name,
-        course.description,
-        String(priceOld)+ priceOld ? CURRENCY : "",
-        priceNew,
-        course.slug,
-        course.course_color
-      );
-      container.appendChild(item);
-      */
     }
   });
-  totalContainer.innerHTML =
-    (Number(priceNew) * selectedCourses.length).toFixed(2) + CURRENCY;
+  
+  totalContainer.innerHTML = calculateTotalPrice().toFixed(2) + CURRENCY;
 }
 
 function renderCheckoutItem(title, badgeText, priceOld, priceNew) {
@@ -444,19 +433,19 @@ function renderCheckoutCourseItem(
 
 // Add this function to initialize Stripe
 async function initializeStripe() {
-  if (typeof Stripe === 'undefined') {
+  if (typeof Stripe === "undefined") {
     // Load Stripe.js if it hasn't been loaded
-    const script = document.createElement('script');
-    script.src = 'https://js.stripe.com/v3/';
+    const script = document.createElement("script");
+    script.src = "https://js.stripe.com/v3/";
     script.async = true;
     document.head.appendChild(script);
-    
+
     // Wait for script to load
     await new Promise((resolve) => {
       script.onload = resolve;
     });
   }
-  
+
   // Initialize Stripe with your publishable key
   // eslint-disable-next-line no-undef
   stripe = Stripe(PUBLISHABLE_KEY);
@@ -472,15 +461,15 @@ async function doPayment(amount) {
     }
 
     const userData = getFromStorage("userData", {});
-    
+
     // Create payment intent with proper error handling
     const response = await fetch(
       "https://us-central1-mind-c3055.cloudfunctions.net/createPaymentIntent",
       {
         method: "POST",
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           amount: amount * 100,
-          currency: 'eur'
+          currency: "eur",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -491,58 +480,59 @@ async function doPayment(amount) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Failed to create payment intent');
+      throw new Error(data.message || "Failed to create payment intent");
     }
 
     // Check for client secret in different possible locations
-    const clientSecret = data.paymentIntent
-    
+    const clientSecret = data.paymentIntent;
+
     if (!clientSecret) {
-      console.error('Payment Intent Response Structure:', data);
-      throw new Error('No client secret received from payment intent');
+      console.error("Payment Intent Response Structure:", data);
+      throw new Error("No client secret received from payment intent");
     }
 
     // Create payment element
     const elements = stripe.elements({
       clientSecret,
       appearance: {
-        theme: 'stripe',
+        theme: "stripe",
         variables: {
-          colorPrimary: '#5469d4',
+          colorPrimary: "#5469d4",
         },
       },
     });
 
     // Remove any existing payment forms
-    const popupWrap = document.querySelector('.popup_wrap');
-    popupWrap.innerHTML = '';
-    popupWrap.parentElement.classList.add('active');
-    popupWrap.parentElement.style.display = 'flex';
-   
+    const popupWrap = document.querySelector(".popup_wrap");
+    popupWrap.innerHTML = "";
+    popupWrap.parentElement.classList.add("active");
+    popupWrap.parentElement.style.display = "flex";
+
     // Create form for payment submission
-    const form = document.createElement('form');
-    form.id = 'payment-form';
-    
-   
+    const form = document.createElement("form");
+    form.id = "payment-form";
 
-    const submitButton = document.createElement('button');
-    submitButton.type = 'submit';
-    submitButton.textContent = 'Pay now';
-    submitButton.classList.add('btn', 'btn-primary', "g_clickable_btn", "btn_main_wrap");
-    submitButton.id = 'submit-payment';
+    const submitButton = document.createElement("button");
+    submitButton.type = "submit";
+    submitButton.textContent = "Pay now";
+    submitButton.classList.add(
+      "btn",
+      "btn-primary",
+      "g_clickable_btn",
+      "btn_main_wrap"
+    );
+    submitButton.id = "submit-payment";
 
-    
     form.appendChild(submitButton);
-   
+
     popupWrap.appendChild(form);
 
-  
     // Handle form submission
-    form.addEventListener('submit', async (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       // Disable the submit button and show loading
       submitButton.disabled = true;
-  
+
       try {
         const { error } = await stripe.confirmPayment({
           elements,
@@ -553,7 +543,7 @@ async function doPayment(amount) {
                 name: `${userData.firstName} ${userData.lastName}`,
                 email: userData.email,
                 address: {
-                  country: 'DE',
+                  country: "DE",
                 },
               },
             },
@@ -561,21 +551,17 @@ async function doPayment(amount) {
         });
 
         if (error) {
-         
-          console.error('Payment failed:', error);
+          console.error("Payment failed:", error);
         } else {
-          console.log('Payment successful!');
+          console.log("Payment successful!");
           // Handle successful payment
-         
         }
       } catch (error) {
-        console.error('Payment error:', error);
-     
+        console.error("Payment error:", error);
       } finally {
         submitButton.disabled = false;
       }
     });
-
   } catch (error) {
     console.error("Error creating payment:", error);
     throw error;
@@ -761,8 +747,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       case 5:
         const form = document.getElementById("signUpForm");
-      
-        
+
         const fields = {
           namePrefix: form.querySelector('select[name="namePrefix"]'),
           firstName: form.querySelector('input[name="firstName"]'),
@@ -773,7 +758,7 @@ document.addEventListener("DOMContentLoaded", function () {
           consent1: form.querySelector('input[name="consent1"]'),
           privacyPolicy: form.querySelector('input[name="privacyPolicy"]'),
         };
-        
+
         const formData = {};
 
         // Clear previous error states
@@ -860,7 +845,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (valid) {
           setToStorage("userData", formData);
           await createUser();
-          await doPayment(100);
+          await doPayment(calculateTotalPrice());
         }
         break;
     }
@@ -948,13 +933,17 @@ document.addEventListener("DOMContentLoaded", function () {
   attachEventListeners();
   showStep(currentStep);
 
-  document.querySelector("form")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    return false;
-  }, true);
+  document.querySelector("form")?.addEventListener(
+    "submit",
+    (e) => {
+      e.preventDefault();
+      return false;
+    },
+    true
+  );
 
   // Add this near the top of your file
-  const paymentStyles = document.createElement('style');
+  const paymentStyles = document.createElement("style");
   paymentStyles.textContent = `
     #payment-form {
       width: 100%;
