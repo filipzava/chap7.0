@@ -463,7 +463,7 @@ async function initializeStripe() {
   return stripe;
 }
 
-// Modify the doPayment function to use Stripe Elements
+// Modify the doPayment function
 async function doPayment(amount) {
   try {
     // Initialize Stripe if not already initialized
@@ -473,78 +473,136 @@ async function doPayment(amount) {
 
     const userData = getFromStorage("userData", {});
     
-    // Create payment intent
+    // Create payment intent with proper error handling
     const response = await fetch(
       "https://us-central1-mind-c3055.cloudfunctions.net/createPaymentIntent",
       {
         method: "POST",
-        body: JSON.stringify({ amount: amount * 100 }),
+        body: JSON.stringify({ 
+          amount: amount * 100,
+          currency: 'eur' // Add currency
+        }),
         headers: {
           "Content-Type": "application/json",
         },
       }
     );
-    const { clientSecret } = await response.json();
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to create payment intent');
+    }
+
+    // Log the response to debug
+    console.log('Payment Intent Response:', data);
+
+    // Make sure we're getting the client secret
+    if (!data.clientSecret) {
+      throw new Error('No client secret received from payment intent');
+    }
+
+    const clientSecret = data.clientSecret;
 
     // Create payment element
     const elements = stripe.elements({
       clientSecret,
       appearance: {
         theme: 'stripe',
+        variables: {
+          colorPrimary: '#5469d4',
+        },
       },
     });
 
-    // Create and mount the Payment Element
-    const paymentElement = elements.create('payment');
-    
+    // Remove any existing payment forms
+    const existingForm = document.getElementById('payment-form');
+    if (existingForm) {
+      existingForm.remove();
+    }
+
     // Create container for Stripe Elements
     const paymentContainer = document.createElement('div');
     paymentContainer.id = 'payment-element';
-    document.body.appendChild(paymentContainer);
-    
-    paymentElement.mount('#payment-element');
 
     // Create form for payment submission
     const form = document.createElement('form');
     form.id = 'payment-form';
+    
+    // Add a loading indicator
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'payment-loading';
+    loadingDiv.style.display = 'none';
+    loadingDiv.textContent = 'Processing payment...';
+
+    // Add error message container
+    const errorDiv = document.createElement('div');
+    errorDiv.id = 'payment-error';
+    errorDiv.style.color = 'red';
+    errorDiv.style.marginBottom = '16px';
+    errorDiv.style.display = 'none';
+
     const submitButton = document.createElement('button');
     submitButton.type = 'submit';
     submitButton.textContent = 'Pay now';
+    submitButton.id = 'submit-payment';
+
     form.appendChild(paymentContainer);
+    form.appendChild(errorDiv);
+    form.appendChild(loadingDiv);
     form.appendChild(submitButton);
-    document.body.appendChild(form);
+
+    // Find the appropriate container in your page
+    const checkoutContainer = document.querySelector('#checkout-container') || document.body;
+    checkoutContainer.appendChild(form);
+
+    // Create and mount the Payment Element
+    const paymentElement = elements.create('payment');
+    paymentElement.mount('#payment-element');
 
     // Handle form submission
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
 
-      const { error } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: window.location.href,
-          payment_method_data: {
-            billing_details: {
-              name: `${userData.firstName} ${userData.lastName}`,
-              email: userData.email,
-              address: {
-                country: 'DE',
+      // Disable the submit button and show loading
+      submitButton.disabled = true;
+      loadingDiv.style.display = 'block';
+      errorDiv.style.display = 'none';
+
+      try {
+        const { error } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            return_url: window.location.href,
+            payment_method_data: {
+              billing_details: {
+                name: `${userData.firstName} ${userData.lastName}`,
+                email: userData.email,
+                address: {
+                  country: 'DE',
+                },
               },
             },
           },
-        },
-      });
+        });
 
-      if (error) {
-        console.error('Payment failed:', error);
-        // Handle error (show error to user)
-        const messageContainer = document.createElement('div');
-        messageContainer.textContent = error.message;
-        messageContainer.style.color = 'red';
-        form.appendChild(messageContainer);
-      } else {
-        console.log('Payment successful!');
-        // Handle successful payment
-        // You might want to redirect to a success page or show a success message
+        if (error) {
+          errorDiv.textContent = error.message;
+          errorDiv.style.display = 'block';
+          console.error('Payment failed:', error);
+        } else {
+          console.log('Payment successful!');
+          // Handle successful payment
+          loadingDiv.textContent = 'Payment successful!';
+          loadingDiv.style.color = 'green';
+        }
+      } catch (error) {
+        console.error('Payment error:', error);
+        errorDiv.textContent = 'An unexpected error occurred. Please try again.';
+        errorDiv.style.display = 'block';
+      } finally {
+        submitButton.disabled = false;
+        loadingDiv.style.display = 'none';
       }
     });
 
