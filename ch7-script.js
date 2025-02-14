@@ -587,67 +587,7 @@ function getFormData() {
     password: form.querySelector('input[name="password"]'),
   };
 
-  // Clear previous error states
-  Object.values(fields).forEach((field) => {
-    if (field) {
-      field.classList.remove("error");
-    }
-  });
-
-  // Validate and collect data
-  Object.entries(fields).forEach(([key, field]) => {
-    if (!field) {
-      console.error(`Field ${key} not found`);
-      isValid = false;
-      return;
-    }
-
-    const value = field.value.trim();
-    formData[key] = value;
-
-    if (!value) {
-      field.classList.add("error");
-      isValid = false;
-    }
-
-    // Email validation
-    if (key === "email" && value) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(value)) {
-        field.classList.add("error");
-        isValid = false;
-      }
-    }
-
-    // Password validation
-    if (key === "password" && value) {
-      if (value.length < 6) {
-        // minimum 6 characters
-        field.classList.add("error");
-        isValid = false;
-      }
-    }
-
-    // Date of birth validation
-    if (key === "dateOfBirth" && value) {
-      const date = new Date(value);
-      const today = new Date();
-      const minAge = 18;
-      const minDate = new Date();
-      minDate.setFullYear(today.getFullYear() - minAge);
-
-      if (isNaN(date.getTime()) || date > today || date > minDate) {
-        field.classList.add("error");
-        isValid = false;
-      }
-    }
-  });
-
-  if (isValid) {
-    setToStorage("userData", formData);
-  }
-
-  return isValid;
+  setToStorage("userData", formData);
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -659,6 +599,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const submitBtn = document.querySelector("[data-btn-submit]");
   const errorMessageStep2 = document.getElementById("error_message");
   const errorMessageStep3 = document.getElementById("error_message_step3");
+  const errorMessageStep4 = document.getElementById("error_message_step4");
+  const errorMessageStep5 = document.getElementById("error_message_step5");
 
   let currentStep = 0;
 
@@ -728,46 +670,110 @@ document.addEventListener("DOMContentLoaded", function () {
         break;
 
       case 5:
-        const nameInput = document.getElementById("name");
-        const emailInput = document.getElementById("email");
-        const paymentRadios = document.querySelectorAll(
-          'input[name="Payment"]'
-        );
-        const consentCheckbox = document.getElementById("zustimmung");
+        const form = document.getElementById("signUpForm");
+        const fields = {
+          namePrefix: form.querySelector('select[name="namePrefix"]'),
+          firstName: form.querySelector('input[name="firstName"]'),
+          lastName: form.querySelector('input[name="lastName"]'),
+          dateOfBirth: form.querySelector('input[name="dateOfBirth"]'),
+          email: form.querySelector('input[name="email"]'),
+          password: form.querySelector('input[name="password"]'),
+        };
 
-        if (!nameInput.value.trim()) {
-          valid = false;
-          errorMessages.push("Please enter your name.");
-        }
-        if (
-          !emailInput.value.trim() ||
-          !/^\S+@\S+\.\S+$/.test(emailInput.value)
-        ) {
-          valid = false;
-          errorMessages.push("Please enter a valid email address.");
-        }
-        if (!Array.from(paymentRadios).some((radio) => radio.checked)) {
-          valid = false;
-          errorMessages.push("Please select a payment option.");
-        }
-        if (!consentCheckbox.checked) {
-          valid = false;
-          errorMessages.push("You must agree to the terms to continue.");
+        const formData = {};
+
+        // Clear previous error states
+        Object.values(fields).forEach((field) => {
+          if (field) {
+            field.classList.remove("error");
+          }
+        });
+
+        // Validate and collect data
+        Object.entries(fields).forEach(([key, field]) => {
+          if (!field) {
+            console.error(`Field ${key} not found`);
+            valid = false;
+            errorMessages.push(`${key} field is missing`);
+            return;
+          }
+
+          const value = field.value.trim();
+          formData[key] = value;
+
+          if (!value) {
+            field.classList.add("error");
+            valid = false;
+            errorMessages.push(`${key} is required`);
+          }
+
+          // Email validation
+          if (key === "email" && value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+              field.classList.add("error");
+              valid = false;
+              errorMessages.push("Please enter a valid email address");
+            }
+          }
+
+          // Password validation
+          if (key === "password" && value) {
+            if (value.length < 6) {
+              field.classList.add("error");
+              valid = false;
+              errorMessages.push("Password must be at least 6 characters long");
+            }
+          }
+
+          // Date of birth validation
+          if (key === "dateOfBirth" && value) {
+            const date = new Date(value);
+            const today = new Date();
+            const minAge = 18;
+            const minDate = new Date();
+            minDate.setFullYear(today.getFullYear() - minAge);
+
+            if (isNaN(date.getTime()) || date > today || date > minDate) {
+              field.classList.add("error");
+              valid = false;
+              errorMessages.push("You must be at least 18 years old");
+            }
+          }
+        });
+
+        if (valid) {
+          setToStorage("userData", formData);
         }
         break;
     }
 
+    // Show error messages if any
     if (!valid) {
-      if (currentStep === 1) {
-        errorMessageStep2.innerHTML = errorMessages.join("<br>");
-        errorMessageStep2.style.display = "block";
-      } else if (currentStep === 2) {
-        errorMessageStep3.innerHTML = errorMessages.join("<br>");
-        errorMessageStep3.style.display = "block";
+      switch (currentStep) {
+        case 1:
+          errorMessageStep2.innerHTML = errorMessages.join("<br>");
+          errorMessageStep2.style.display = "block";
+          break;
+        case 2:
+          errorMessageStep3.innerHTML = errorMessages.join("<br>");
+          errorMessageStep3.style.display = "block";
+          break;
+        case 4:
+          errorMessageStep4.innerHTML = errorMessages.join("<br>");
+          errorMessageStep4.style.display = "block";
+          break;
+        case 5:
+          errorMessageStep5.innerHTML = errorMessages.join("<br>");
+          errorMessageStep5.style.display = "block";
+          break;
       }
     } else {
+      // Hide all error messages if valid
       errorMessageStep2.style.display = "none";
       errorMessageStep3.style.display = "none";
+      errorMessageStep4.style.display = "none";
+      errorMessageStep5.style.display = "none";
     }
 
     return valid;
