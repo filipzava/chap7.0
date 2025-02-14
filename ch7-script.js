@@ -447,7 +447,7 @@ async function doPayment(amount) {
       "https://us-central1-mind-c3055.cloudfunctions.net/createPaymentIntent",
       {
         method: "POST",
-        body: { amount: amount * 100 },
+        body: JSON.stringify({ amount: amount * 100 }),
         headers: {
           "Content-Type": "application/json",
         },
@@ -660,6 +660,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
       case 5:
         const form = document.getElementById("signUpForm");
+        // Add preventDefault to stop the default form submission
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          return false;
+        });
+        
         const fields = {
           namePrefix: form.querySelector('select[name="namePrefix"]'),
           firstName: form.querySelector('input[name="firstName"]'),
@@ -845,7 +851,8 @@ document.addEventListener("DOMContentLoaded", function () {
   attachEventListeners();
   showStep(currentStep);
 
-  document.querySelector("form").addEventListener("submit", (e) => {
+  document.querySelector("form")?.addEventListener("submit", (e) => {
     e.preventDefault();
-  });
+    return false;
+  }, true);
 });
