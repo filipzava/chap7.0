@@ -460,19 +460,20 @@ async function initializeStripe() {
   // Initialize Stripe with your publishable key
   // eslint-disable-next-line no-undef
   stripe = Stripe(PUBLISHABLE_KEY);
-  console.log(stripe);
   return stripe;
 }
 
-// Modify the doPayment function
+// Modify the doPayment function to use Stripe Elements
 async function doPayment(amount) {
   try {
     // Initialize Stripe if not already initialized
     if (!stripe) {
-      await initializeStripe();  
+      await initializeStripe();
     }
 
     const userData = getFromStorage("userData", {});
+    
+    // Create payment intent
     const response = await fetch(
       "https://us-central1-mind-c3055.cloudfunctions.net/createPaymentIntent",
       {
@@ -483,28 +484,70 @@ async function doPayment(amount) {
         },
       }
     );
-    const { paymentIntent } = await response.json();
-    
-    await stripe.initPaymentSheet({
-      paymentIntentClientSecret: paymentIntent,
-      defaultBillingDetails: {
-        email: userData.email,
-        name: userData.firstName + " " + userData.lastName,
-        address: { country: "DE" },
+    const { clientSecret } = await response.json();
+
+    // Create payment element
+    const elements = stripe.elements({
+      clientSecret,
+      appearance: {
+        theme: 'stripe',
       },
-      merchantDisplayName: "7 Mind Courses",
-      allowsDelayedPaymentMethods: false,
     });
 
-    // Show the Payment Sheet
-    const { error, paymentMethod } = await stripe.presentPaymentSheet();
-    if (error) {
-      console.error("Payment failed:", error);
-      throw error;
-    } else {
-      console.log("Payment successful!", paymentMethod);
-      return paymentMethod;
-    }
+    // Create and mount the Payment Element
+    const paymentElement = elements.create('payment');
+    
+    // Create container for Stripe Elements
+    const paymentContainer = document.createElement('div');
+    paymentContainer.id = 'payment-element';
+    document.body.appendChild(paymentContainer);
+    
+    paymentElement.mount('#payment-element');
+
+    // Create form for payment submission
+    const form = document.createElement('form');
+    form.id = 'payment-form';
+    const submitButton = document.createElement('button');
+    submitButton.type = 'submit';
+    submitButton.textContent = 'Pay now';
+    form.appendChild(paymentContainer);
+    form.appendChild(submitButton);
+    document.body.appendChild(form);
+
+    // Handle form submission
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: window.location.href,
+          payment_method_data: {
+            billing_details: {
+              name: `${userData.firstName} ${userData.lastName}`,
+              email: userData.email,
+              address: {
+                country: 'DE',
+              },
+            },
+          },
+        },
+      });
+
+      if (error) {
+        console.error('Payment failed:', error);
+        // Handle error (show error to user)
+        const messageContainer = document.createElement('div');
+        messageContainer.textContent = error.message;
+        messageContainer.style.color = 'red';
+        form.appendChild(messageContainer);
+      } else {
+        console.log('Payment successful!');
+        // Handle successful payment
+        // You might want to redirect to a success page or show a success message
+      }
+    });
+
   } catch (error) {
     console.error("Error creating payment:", error);
     throw error;
@@ -882,5 +925,45 @@ document.addEventListener("DOMContentLoaded", function () {
     return false;
   }, true);
 
-  
+  // Add this near the top of your file
+  const paymentStyles = document.createElement('style');
+  paymentStyles.textContent = `
+    #payment-form {
+      width: 100%;
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    #payment-element {
+      margin-bottom: 24px;
+    }
+
+    button {
+      background: #5469d4;
+      color: #ffffff;
+      border-radius: 4px;
+      border: 0;
+      padding: 12px 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: block;
+      transition: all 0.2s ease;
+      box-shadow: 0px 4px 5.5px 0px rgba(0, 0, 0, 0.07);
+      width: 100%;
+    }
+
+    button:hover {
+      filter: brightness(1.1);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  `;
+  document.head.appendChild(paymentStyles);
 });
