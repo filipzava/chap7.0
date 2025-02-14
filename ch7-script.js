@@ -514,31 +514,16 @@ async function doPayment(amount) {
     });
 
     // Remove any existing payment forms
-    const existingForm = document.getElementById('payment-form');
-    if (existingForm) {
-      existingForm.remove();
-    }
-
-    // Create container for Stripe Elements
-    const paymentContainer = document.createElement('div');
-    paymentContainer.id = 'payment-element';
-
+    const popupWrap = document.querySelector('.popup_wrap');
+    popupWrap.innerHTML = '';
+    popupWrap.parentElement.classList.add('active');
+    popupWrap.parentElement.style.display = 'flex';
+   
     // Create form for payment submission
     const form = document.createElement('form');
     form.id = 'payment-form';
     
-    // Add a loading indicator
-    const loadingDiv = document.createElement('div');
-    loadingDiv.id = 'payment-loading';
-    loadingDiv.style.display = 'none';
-    loadingDiv.textContent = 'Processing payment...';
-
-    // Add error message container
-    const errorDiv = document.createElement('div');
-    errorDiv.id = 'payment-error';
-    errorDiv.style.color = 'red';
-    errorDiv.style.marginBottom = '16px';
-    errorDiv.style.display = 'none';
+   
 
     const submitButton = document.createElement('button');
     submitButton.type = 'submit';
@@ -546,28 +531,18 @@ async function doPayment(amount) {
     submitButton.classList.add('btn', 'btn-primary', "g_clickable_btn", "btn_main_wrap");
     submitButton.id = 'submit-payment';
 
-    form.appendChild(paymentContainer);
-    form.appendChild(errorDiv);
-    form.appendChild(loadingDiv);
+    
     form.appendChild(submitButton);
+   
+    popupWrap.appendChild(form);
 
-    // Find the appropriate container in your page
-    const checkoutContainer = document.querySelector('#checkout-container') || document.body;
-    checkoutContainer.appendChild(form);
-
-    // Create and mount the Payment Element
-    const paymentElement = elements.create('payment');
-    paymentElement.mount('#payment-element');
-
+  
     // Handle form submission
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-
       // Disable the submit button and show loading
       submitButton.disabled = true;
-      loadingDiv.style.display = 'block';
-      errorDiv.style.display = 'none';
-
+  
       try {
         const { error } = await stripe.confirmPayment({
           elements,
@@ -586,22 +561,18 @@ async function doPayment(amount) {
         });
 
         if (error) {
-          errorDiv.textContent = error.message;
-          errorDiv.style.display = 'block';
+         
           console.error('Payment failed:', error);
         } else {
           console.log('Payment successful!');
           // Handle successful payment
-          loadingDiv.textContent = 'Payment successful!';
-          loadingDiv.style.color = 'green';
+         
         }
       } catch (error) {
         console.error('Payment error:', error);
-        errorDiv.textContent = 'An unexpected error occurred. Please try again.';
-        errorDiv.style.display = 'block';
+     
       } finally {
         submitButton.disabled = false;
-        loadingDiv.style.display = 'none';
       }
     });
 
@@ -992,34 +963,6 @@ document.addEventListener("DOMContentLoaded", function () {
       padding: 20px;
       border: 1px solid #ddd;
       border-radius: 4px;
-    }
-
-    #payment-element {
-      margin-bottom: 24px;
-    }
-
-    button {
-      background: #5469d4;
-      color: #ffffff;
-      border-radius: 4px;
-      border: 0;
-      padding: 12px 16px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      display: block;
-      transition: all 0.2s ease;
-      box-shadow: 0px 4px 5.5px 0px rgba(0, 0, 0, 0.07);
-      width: 100%;
-    }
-
-    button:hover {
-      filter: brightness(1.1);
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: default;
     }
   `;
   document.head.appendChild(paymentStyles);
