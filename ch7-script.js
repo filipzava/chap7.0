@@ -371,7 +371,7 @@ function populateCheckout() {
     if (selectedCourses.includes(course.slug)) {
       const item = renderCheckoutItem(
         course.name,
-        course.recommendation_description,
+        selectedCourses.length === 2 ? "20%" : "",
         priceOld,
         priceNew
       );
@@ -405,7 +405,7 @@ function renderCheckoutItem(title, badgeText, priceOld, priceNew) {
             <div class="card_product_price">
                 ${
                   badgeText
-                    ? `<div id="rabatt" class="badge is-rabatt"><div><span>${badgeText}</span> Rabatt</div></div>`
+                    ? `<div class="badge is-rabatt"><div><span>${badgeText}</span> Rabatt</div></div>`
                     : ""
                 }
                 <div class="price_text_new">${priceNew}€</div>
