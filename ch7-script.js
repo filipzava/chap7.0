@@ -396,7 +396,7 @@ function populateCheckout() {
 
 function renderCheckoutItem(title, badgeText, priceOld, priceNew) {
   const wrapper = document.createElement("div");
-  wrapper.className = "card_product is-default";
+  wrapper.className = "card_product";
 
   wrapper.innerHTML = `
     <div class="card_product_content u-vflex-stretch-top u-gap-4">
