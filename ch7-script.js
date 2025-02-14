@@ -345,6 +345,21 @@ function calculateTotalPrice() {
   return 0;
 }
 
+// Add this utility function near the other utility functions
+function calculateDiscountPercentage() {
+  const pricing = getFromStorage("pricing", {});
+  const selectedCourses = getFromStorage("selectedCourses", []);
+  
+  if (selectedCourses.length === 2) {
+    const regularPrice = Number(pricing.singleCoursePrice) * 2;
+    const discountedPrice = Number(pricing.twoCoursesPrice);
+    const discount = ((regularPrice - discountedPrice) / regularPrice) * 100;
+    return Math.round(discount); // Round to nearest integer
+  }
+  return 0;
+}
+
+// Update populateCheckout to use the new utility function
 function populateCheckout() {
   const container = document.querySelector("#productList");
   const totalContainer = document.querySelector("#priceTotal");
@@ -352,6 +367,7 @@ function populateCheckout() {
   const selectedCourses = getFromStorage("selectedCourses", []);
   const pricing = getFromStorage("pricing", {});
 
+  const discountPercentage = calculateDiscountPercentage();
   const priceOld = selectedCourses.length === 2 ? Number(pricing.singleCoursePrice) : "";
   const priceNew = selectedCourses.length === 2 
     ? Number(pricing.twoCoursesPrice) / 2 
@@ -361,7 +377,7 @@ function populateCheckout() {
     if (selectedCourses.includes(course.slug)) {
       const item = renderCheckoutItem(
         course.name,
-        selectedCourses.length === 2 ? "20%" : "",
+        discountPercentage ? `${discountPercentage}%` : "",
         priceOld,
         priceNew
       );
