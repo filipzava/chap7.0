@@ -440,13 +440,18 @@ function renderCheckoutCourseItem(
   return template.content.firstElementChild;
 }
 
-
 async function doPayment(amount) {
   try {
     const userData = getFromStorage("userData", {});
     const response = await fetch(
       "https://us-central1-mind-c3055.cloudfunctions.net/createPaymentIntent",
-      { method: "POST", body: JSON.stringify({ amount: amount * 100 }) }
+      {
+        method: "POST",
+        body: { amount: amount * 100 },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
     );
     const { paymentIntent } = await response.json();
     // eslint-disable-next-line no-undef
@@ -573,7 +578,6 @@ function populateNamePrefix() {
     namePrefixSelect.appendChild(option);
   });
 }
-
 
 document.addEventListener("DOMContentLoaded", function () {
   const steps = document.querySelectorAll(
@@ -749,7 +753,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
           }
         });
-        
+
         if (valid) {
           setToStorage("userData", formData);
           await createUser();
