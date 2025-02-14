@@ -536,11 +536,11 @@ function getFormData() {
 
   // Get form fields
   const fields = {
-    namePrefix: form.querySelector('select[id="namePrefix"]'),
-    firstName: form.querySelector('input[id="firstName"]'),
-    lastName: form.querySelector('input[id="lastName"]'),
-    dateOfBirth: form.querySelector('input[id="dateOfBirth"]'),
-    email: form.querySelector('input[id="email"]'),
+    namePrefix: form.querySelector('select[name="namePrefix"]'),
+    firstName: form.querySelector('input[name="firstName"]'),
+    lastName: form.querySelector('input[name="lastName"]'),
+    dateOfBirth: form.querySelector('input[name="dateOfBirth"]'),
+    email: form.querySelector('input[name="email"]'),
     password: form.querySelector('input[name="password"]')
   };
 
