@@ -468,12 +468,12 @@ async function doPayment(amount) {
     });
 
     // Show the Payment Sheet
-    const { error } = await stripe.presentPaymentSheet();
+    const { error, paymentMethod } = await stripe.presentPaymentSheet();
     if (error) {
       console.error("Payment failed:", error);
-      alert(`Payment failed: ${error.message}`);
+      
     } else {
-      alert("Payment successful!");
+      console.log("Payment successful!", paymentMethod);
     }
   } catch (error) {
     console.error("Error creating payment:", error);
