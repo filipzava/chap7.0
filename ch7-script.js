@@ -734,7 +734,7 @@ document.addEventListener("DOMContentLoaded", function () {
     onboardingHook({ steps: steps, current: steps[index], index: index });
   }
 
-  async function validateCurrentStep() {
+  async function isCurrentStepValid() {
     let valid = true;
     let errorMessages = [];
 
@@ -917,7 +917,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function handleNextClick(event) {
     
-    if (!validateCurrentStep()) {
+    if (isCurrentStepValid() === false) {
+      console.log("isCurrentStepValid", isCurrentStepValid());
       event.preventDefault();
       return;
     }
