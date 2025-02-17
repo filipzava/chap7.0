@@ -488,7 +488,7 @@ async function doPayment(amount) {
         body: JSON.stringify({
           amount: amount * 100,
           userId: getFromStorage("createUserResponse", {}).userId,
-          courseSlugs: getFromStorage("selectedCourses", []).map((course) => course.slug),
+          courseSlugs: getFromStorage("selectedCourses", []),
         }),
         headers: {
           "Content-Type": "application/json",
