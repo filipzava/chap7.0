@@ -296,10 +296,10 @@ function renderCardResult(imageSrc, title, text, color) {
 function populateSummary() {
   const container = document.querySelector("#summary");
   const recommendedCourses = getFromStorage("recommendedCourses", []);
-  recommendedCourses.map((course) => {
+  recommendedCourses.reverse().map((course) => {
     const courseData = getFromStorage("courses", [])?.find((item) => item.slug === course);
     if (courseData) {
-      container.appendChild(
+      container.prepend(
         renderCardResult(
           "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Icon-round-Question_mark.svg/240px-Icon-round-Question_mark.svg.png",
           courseData.name,
