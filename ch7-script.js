@@ -146,26 +146,6 @@ function getFilteredContraindications() {
   );
 }
 
-async function populateCourses() {
-  const res = await fetch(getDocumentFromFireBase("courses"));
-
-  const data = await res.json();
-
-  if (data.success && data.data["courses-info"].length) {
-    setToStorage("courses", data.data["courses-info"]);
-    const container = document.querySelector("#coursesContainer");
-    container.innerHTML = "";
-    data.data["courses-info"].forEach((data) => {
-      const item = renderCourseItem(
-        data.slug,
-        data.recommendation_description,
-        "https://cdn.prod.website-files.com/676e8e3a573b707f2be07685/677d7fc464ea793a4794a3a2_image%20112.webp"
-      );
-      container.appendChild(item);
-    });
-  }
-}
-
 async function fetchCourses() {
   const res = await fetch(getDocumentFromFireBase("courses"));
   const data = await res.json();
@@ -978,9 +958,8 @@ document.addEventListener("DOMContentLoaded", function () {
       btn.addEventListener("click", handlePrevClick);
     });
   }
- 
+  fetchHealthProviders();
   attachEventListeners();
   showStep(currentStep);
 });
 
-fetchHealthProviders();
