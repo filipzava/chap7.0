@@ -53,10 +53,10 @@ function onboardingHook({ current, index }) {
   } else if (index === 1) {
     populateOnboardingSurveyStep1();
   } else if (index === 2) {
-    getSelectedCourses();
+    getStep1Answers();
     populateOnboardingSurveyStep2();
   } else if (index === 3) {
-    getCheckedSurveyAnswers();
+    getStep2Answers();
     populateSummary();
   } else if (index === 4) {
     populateContraindications();
@@ -217,7 +217,7 @@ function renderCourseItem(id, value, text, imgSrc) {
   return template.content.firstElementChild;
 }
 
-function getSelectedCourses() {
+function getStep1Answers() {
   const selectedCheckboxes = document.querySelectorAll(
     "#coursesContainer .card_select_checkbox:checked"
   );
@@ -256,7 +256,7 @@ async function populateOnboardingSurveyStep2() {
   }
 }
 
-function getCheckedSurveyAnswers() {
+function getStep2Answers() {
   const selectedCheckboxes = document.querySelectorAll(
     ".custom-checkbox-input:checked"
   );
@@ -265,7 +265,7 @@ function getCheckedSurveyAnswers() {
     (checkbox) => checkbox.id
   );
   const onboardingSurvey = getFromStorage("onboardingSurvey", [])?.[1]?.answers;
-  setToStorage("onboardingSurveyAnswers_2", surveyAnswers.map((id) => ({id, type: onboardingSurvey.find((item) => item.id === id).type})));
+  setToStorage("onboardingSurveyAnswers_2", surveyAnswers.map((id) => ({id, type: onboardingSurvey.find((item) => item.id === id)?.type})));
 }
 
 function renderCardResult(imageSrc, title, text, color) {
