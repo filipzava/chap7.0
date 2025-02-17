@@ -1,6 +1,24 @@
 /* eslint-disable no-case-declarations */
 /* eslint-disable no-undef */
 
+const dictionary = {
+  "error.namePrefix": "Bitte wählen Sie Ihre Anrede aus",
+  "error.firstName": "Bitte geben Sie Ihren Vornamen ein",
+  "error.lastName": "Bitte geben Sie Ihren Nachnamen ein",
+  "error.dateOfBirth": "Bitte geben Sie Ihr Geburtsdatum ein",
+  "error.email": "Bitte geben Sie Ihre E-Mail-Adresse ein",
+  "error.emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+  "error.password": "Bitte geben Sie ein Passwort ein",
+  "error.passwordLength": "Das Passwort muss mindestens 6 Zeichen lang sein",
+  "error.ageRestriction": "Sie müssen mindestens 18 Jahre alt sein",
+  "error.termsAndConditions": "Bitte stimmen Sie den Nutzungsbedingungen zu",
+  "error.privacyPolicy": "Bitte stimmen Sie der Datenschutzerklärung zu",
+  "error.requiredFields": "Bitte füllen Sie alle erforderlichen Felder aus",
+  "error.healthProvider": "Bitte wählen Sie eine Krankenkasse aus",
+  "error.selectOptions": "Bitte wählen Sie 1 oder 2 Optionen aus",
+  "error.agreeToTerms": "Bitte stimmen Sie beiden Bedingungen zu"
+};
+
 const PUBLISHABLE_KEY =
   "pk_test_51QPhSmIjMlCwpKLpOSWig7J6FCQyFQ5NEysG3mXGy5tzXfZ61wwdGDSU2m6qPO8QwWeUMokteES3SyTUJlqJF6JP00zRyrYPId";
 
@@ -806,33 +824,25 @@ document.addEventListener("DOMContentLoaded", function () {
       switch (currentStep) {
         case 0:
           const dropdown = document.getElementById("healthProviders");
-          if (
-            !dropdown ||
-            dropdown.value.trim() === "" ||
-            dropdown.value === null
-          ) {
+          if (!dropdown || dropdown.value.trim() === "" || dropdown.value === null) {
             valid = false;
-            errorMessages.push("Please select an option from the dropdown.");
+            errorMessages.push(dictionary["error.healthProvider"]);
           }
           break;
 
         case 1:
-          const checkboxesStep2 = document.querySelectorAll(
-            ".card_select_checkbox:checked"
-          );
+          const checkboxesStep2 = document.querySelectorAll(".card_select_checkbox:checked");
           if (checkboxesStep2.length < 1 || checkboxesStep2.length > 2) {
             valid = false;
-            errorMessages.push("Please select 1 or 2 options.");
+            errorMessages.push(dictionary["error.selectOptions"]);
           }
           break;
 
         case 2:
-          const checkboxesStep3 = document.querySelectorAll(
-            ".custom-checkbox-input:checked"
-          );
+          const checkboxesStep3 = document.querySelectorAll(".custom-checkbox-input:checked");
           if (checkboxesStep3.length < 1 || checkboxesStep3.length > 2) {
             valid = false;
-            errorMessages.push("Please select 1 or 2 options.");
+            errorMessages.push(dictionary["error.selectOptions"]);
           }
           break;
 
@@ -841,7 +851,7 @@ document.addEventListener("DOMContentLoaded", function () {
           const popupConsent2 = document.getElementById("popupConsent2");
           if (!popupConsent1.checked || !popupConsent2.checked) {
             valid = false;
-            errorMessages.push("Please agree to both terms before continuing.");
+            errorMessages.push(dictionary["error.agreeToTerms"]);
           }
           break;
 
@@ -871,7 +881,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!field) {
               console.error(`Field ${key} not found`);
               valid = false;
-              errorMessages.push("Please fill in all required fields");
+              errorMessages.push(dictionary["error.requiredFields"]);
               return;
             }
 
@@ -883,22 +893,22 @@ document.addEventListener("DOMContentLoaded", function () {
               valid = false;
               switch (key) {
                 case "namePrefix":
-                  errorMessages.push("Please select your title");
+                  errorMessages.push(dictionary["error.namePrefix"]);
                   break;
                 case "firstName":
-                  errorMessages.push("Please enter your first name");
+                  errorMessages.push(dictionary["error.firstName"]);
                   break;
                 case "lastName":
-                  errorMessages.push("Please enter your last name");
+                  errorMessages.push(dictionary["error.lastName"]);
                   break;
                 case "dateOfBirth":
-                  errorMessages.push("Please enter your date of birth");
+                  errorMessages.push(dictionary["error.dateOfBirth"]);
                   break;
                 case "email":
-                  errorMessages.push("Please enter your email address");
+                  errorMessages.push(dictionary["error.email"]);
                   break;
                 case "password":
-                  errorMessages.push("Please enter a password");
+                  errorMessages.push(dictionary["error.password"]);
                   break;
               }
             }
@@ -909,7 +919,7 @@ document.addEventListener("DOMContentLoaded", function () {
               if (!emailRegex.test(value)) {
                 field.classList.add("error");
                 valid = false;
-                errorMessages.push("Please enter a valid email address");
+                errorMessages.push(dictionary["error.emailInvalid"]);
               }
             }
 
@@ -918,7 +928,7 @@ document.addEventListener("DOMContentLoaded", function () {
               if (value.length < 6) {
                 field.classList.add("error");
                 valid = false;
-                errorMessages.push("Password must be at least 6 characters long");
+                errorMessages.push(dictionary["error.passwordLength"]);
               }
             }
 
@@ -933,20 +943,20 @@ document.addEventListener("DOMContentLoaded", function () {
               if (isNaN(date.getTime()) || date > today || date > minDate) {
                 field.classList.add("error");
                 valid = false;
-                errorMessages.push("You must be at least 18 years old");
+                errorMessages.push(dictionary["error.ageRestriction"]);
               }
             }
 
             if (key === "consent1" && !field.checked) {
               field.classList.add("error");
               valid = false;
-              errorMessages.push("Please agree to the terms and conditions");
+              errorMessages.push(dictionary["error.termsAndConditions"]);
             }
 
             if (key === "privacyPolicy" && !field.checked) {
               field.classList.add("error");
               valid = false;
-              errorMessages.push("Please agree to the privacy policy");
+              errorMessages.push(dictionary["error.privacyPolicy"]);
             }
           });
           
