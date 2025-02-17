@@ -231,7 +231,6 @@ async function fetchOnboardingSurvey() {
 }
 
 async function populateOnboardingSurveyStep2() {
-  
   const onboardingSurvey = getFromStorage("onboardingSurvey", [])?.[1]?.answers;
   if (onboardingSurvey.length) {
     const container = document.querySelector("#onboardingSurvey");
@@ -959,6 +958,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
   fetchHealthProviders();
+  fetchOnboardingSurvey();
   attachEventListeners();
   showStep(currentStep);
 });
