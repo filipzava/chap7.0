@@ -921,11 +921,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Modify handleNextClick to properly handle the async validation
   async function handleNextClick(event) {
+    console.log("handleNextClick");
     event.preventDefault();
     
     try {
       const isValid = await isCurrentStepValid();
-      
+      console.log("isValid", isValid);
       if (!isValid) {
         return;
       }
