@@ -224,7 +224,8 @@ async function fetchOnboardingSurvey() {
   const res = await fetch(getWebflowStory("onboarding-survey"));
   const data = await res.json();
   const onboardingSurvey = data?.story?.content?.onboarding_survey_steps;
-  if (data.success && onboardingSurvey) {
+  console.log({onboardingSurvey});
+  if ( onboardingSurvey?.length) {
     setToStorage("onboardingSurvey", onboardingSurvey);
   }
   return onboardingSurvey;
