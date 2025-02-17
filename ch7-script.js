@@ -551,7 +551,6 @@ async function doPayment(amount) {
               billing_details: {
                 name: `${userData.firstName} ${userData.lastName}`,
                 email: userData.email,
-                userId: getFromStorage("createUserResponse", {}).userId,
                 address: {
                   country: "DE",
                 },
