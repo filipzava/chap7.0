@@ -734,197 +734,208 @@ document.addEventListener("DOMContentLoaded", function () {
     onboardingHook({ steps: steps, current: steps[index], index: index });
   }
 
+  // Modify isCurrentStepValid to properly return a Promise
   async function isCurrentStepValid() {
     let valid = true;
     let errorMessages = [];
 
-    switch (currentStep) {
-      case 0:
-        const dropdown = document.getElementById("healthProviders");
-        if (
-          !dropdown ||
-          dropdown.value.trim() === "" ||
-          dropdown.value === null
-        ) {
-          valid = false;
-          errorMessages.push("Please select an option from the dropdown.");
-        }
-        break;
-
-      case 1:
-        const checkboxesStep2 = document.querySelectorAll(
-          ".card_select_checkbox:checked"
-        );
-        if (checkboxesStep2.length < 1 || checkboxesStep2.length > 2) {
-          valid = false;
-          errorMessages.push("Please select 1 or 2 options.");
-        }
-        break;
-
-      case 2:
-        const checkboxesStep3 = document.querySelectorAll(
-          ".custom-checkbox-input:checked"
-        );
-        if (checkboxesStep3.length < 1 || checkboxesStep3.length > 2) {
-          valid = false;
-          errorMessages.push("Please select 1 or 2 options.");
-        }
-        break;
-
-      case 4:
-        const popupConsent1 = document.getElementById("popupConsent1");
-        const popupConsent2 = document.getElementById("popupConsent2");
-        if (!popupConsent1.checked || !popupConsent2.checked) {
-          valid = false;
-          errorMessages.push("Please agree to both terms before continuing.");
-        }
-        break;
-
-      case 5:
-        const form = document.getElementById("signUpForm");
-       
-        const fields = {
-          namePrefix: form.querySelector('select[name="namePrefix"]'),
-          firstName: form.querySelector('input[name="firstName"]'),
-          lastName: form.querySelector('input[name="lastName"]'),
-          dateOfBirth: form.querySelector('input[name="dateOfBirth"]'),
-          email: form.querySelector('input[name="email"]'),
-          password: form.querySelector('input[name="password"]'),
-          consent1: form.querySelector('input[name="consent1"]'),
-          privacyPolicy: form.querySelector('input[name="privacyPolicy"]'),
-        };
-
-        const formData = {};
-
-        // Clear previous error states
-        Object.values(fields).forEach((field) => {
-          if (field) {
-            field.classList.remove("error");
-          }
-        });
-
-        // Validate and collect data
-        Object.entries(fields).forEach(([key, field]) => {
-          if (!field) {
-            console.error(`Field ${key} not found`);
-            valid = false;
-            errorMessages.push(`${key} field is missing`);
-            return;
-          }
-
-          const value = field.value.trim();
-          formData[key] = value;
-
-          if (!value) {
-            field.classList.add("error");
-            valid = false;
-            errorMessages.push(`${key} is required`);
-          }
-
-          // Email validation
-          if (key === "email" && value) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(value)) {
-              field.classList.add("error");
-              valid = false;
-              errorMessages.push("Please enter a valid email address");
-            }
-          }
-
-          // Password validation
-          if (key === "password" && value) {
-            if (value.length < 6) {
-              field.classList.add("error");
-              valid = false;
-              errorMessages.push("Password must be at least 6 characters long");
-            }
-          }
-
-          // Date of birth validation
-          if (key === "dateOfBirth" && value) {
-            const date = new Date(value);
-            const today = new Date();
-            const minAge = 18;
-            const minDate = new Date();
-            minDate.setFullYear(today.getFullYear() - minAge);
-
-            if (isNaN(date.getTime()) || date > today || date > minDate) {
-              field.classList.add("error");
-              valid = false;
-              errorMessages.push("You must be at least 18 years old");
-            }
-          }
-
-          if (key === "consent1") {
-            if (!field.checked) {
-              field.classList.add("error");
-              valid = false;
-              errorMessages.push(
-                "Please agree to the consent before continuing."
-              );
-            }
-          }
-
-          if (key === "privacyPolicy") {
-            if (!field.checked) {
-              field.classList.add("error");
-              valid = false;
-              errorMessages.push(
-                "Please agree to the privacy policy before continuing."
-              );
-            }
-          }
-        });
-        
-        if (valid) {
-          setToStorage("userData", formData);
-          await createUser();
-          await doPayment(calculateTotalPrice());
-        }
-        break;
-    }
-
-    // Show error messages if any
-    if (!valid) {
+    try {
       switch (currentStep) {
+        case 0:
+          const dropdown = document.getElementById("healthProviders");
+          if (
+            !dropdown ||
+            dropdown.value.trim() === "" ||
+            dropdown.value === null
+          ) {
+            valid = false;
+            errorMessages.push("Please select an option from the dropdown.");
+          }
+          break;
+
         case 1:
-          errorMessageStep2.innerHTML = errorMessages.join("<br>");
-          errorMessageStep2.style.display = "block";
+          const checkboxesStep2 = document.querySelectorAll(
+            ".card_select_checkbox:checked"
+          );
+          if (checkboxesStep2.length < 1 || checkboxesStep2.length > 2) {
+            valid = false;
+            errorMessages.push("Please select 1 or 2 options.");
+          }
           break;
+
         case 2:
-          errorMessageStep3.innerHTML = errorMessages.join("<br>");
-          errorMessageStep3.style.display = "block";
+          const checkboxesStep3 = document.querySelectorAll(
+            ".custom-checkbox-input:checked"
+          );
+          if (checkboxesStep3.length < 1 || checkboxesStep3.length > 2) {
+            valid = false;
+            errorMessages.push("Please select 1 or 2 options.");
+          }
           break;
+
         case 4:
-          errorMessageStep4.innerHTML = errorMessages.join("<br>");
-          errorMessageStep4.style.display = "block";
+          const popupConsent1 = document.getElementById("popupConsent1");
+          const popupConsent2 = document.getElementById("popupConsent2");
+          if (!popupConsent1.checked || !popupConsent2.checked) {
+            valid = false;
+            errorMessages.push("Please agree to both terms before continuing.");
+          }
           break;
+
         case 5:
-          errorMessageStep5.innerHTML = errorMessages.join("<br>");
-          errorMessageStep5.style.display = "block";
+          const form = document.getElementById("signUpForm");
+          const fields = {
+            namePrefix: form.querySelector('select[name="namePrefix"]'),
+            firstName: form.querySelector('input[name="firstName"]'),
+            lastName: form.querySelector('input[name="lastName"]'),
+            dateOfBirth: form.querySelector('input[name="dateOfBirth"]'),
+            email: form.querySelector('input[name="email"]'),
+            password: form.querySelector('input[name="password"]'),
+            consent1: form.querySelector('input[name="consent1"]'),
+            privacyPolicy: form.querySelector('input[name="privacyPolicy"]'),
+          };
+
+          // Clear previous error states
+          Object.values(fields).forEach((field) => {
+            if (field) {
+              field.classList.remove("error");
+            }
+          });
+
+          // Validate and collect data
+          const formData = {};
+          Object.entries(fields).forEach(([key, field]) => {
+            if (!field) {
+              console.error(`Field ${key} not found`);
+              valid = false;
+              errorMessages.push(`${key} field is missing`);
+              return;
+            }
+
+            const value = field.value.trim();
+            formData[key] = value;
+
+            if (!value) {
+              field.classList.add("error");
+              valid = false;
+              errorMessages.push(`${key} is required`);
+            }
+
+            // Email validation
+            if (key === "email" && value) {
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(value)) {
+                field.classList.add("error");
+                valid = false;
+                errorMessages.push("Please enter a valid email address");
+              }
+            }
+
+            // Password validation
+            if (key === "password" && value) {
+              if (value.length < 6) {
+                field.classList.add("error");
+                valid = false;
+                errorMessages.push("Password must be at least 6 characters long");
+              }
+            }
+
+            // Date of birth validation
+            if (key === "dateOfBirth" && value) {
+              const date = new Date(value);
+              const today = new Date();
+              const minAge = 18;
+              const minDate = new Date();
+              minDate.setFullYear(today.getFullYear() - minAge);
+
+              if (isNaN(date.getTime()) || date > today || date > minDate) {
+                field.classList.add("error");
+                valid = false;
+                errorMessages.push("You must be at least 18 years old");
+              }
+            }
+
+            if (key === "consent1") {
+              if (!field.checked) {
+                field.classList.add("error");
+                valid = false;
+                errorMessages.push(
+                  "Please agree to the consent before continuing."
+                );
+              }
+            }
+
+            if (key === "privacyPolicy") {
+              if (!field.checked) {
+                field.classList.add("error");
+                valid = false;
+                errorMessages.push(
+                  "Please agree to the privacy policy before continuing."
+                );
+              }
+            }
+          });
+          
+          if (valid) {
+            setToStorage("userData", formData);
+            await createUser();
+            await doPayment(calculateTotalPrice());
+          }
           break;
       }
-    } else {
-      // Hide all error messages if valid
-      errorMessageStep2.style.display = "none";
-      errorMessageStep3.style.display = "none";
-      errorMessageStep4.style.display = "none";
-      errorMessageStep5.style.display = "none";
-    }
 
-    return valid;
+      // Show error messages if any
+      if (!valid) {
+        switch (currentStep) {
+          case 1:
+            errorMessageStep2.innerHTML = errorMessages.join("<br>");
+            errorMessageStep2.style.display = "block";
+            break;
+          case 2:
+            errorMessageStep3.innerHTML = errorMessages.join("<br>");
+            errorMessageStep3.style.display = "block";
+            break;
+          case 4:
+            errorMessageStep4.innerHTML = errorMessages.join("<br>");
+            errorMessageStep4.style.display = "block";
+            break;
+          case 5:
+            errorMessageStep5.innerHTML = errorMessages.join("<br>");
+            errorMessageStep5.style.display = "block";
+            break;
+        }
+      } else {
+        // Hide all error messages if valid
+        errorMessageStep2.style.display = "none";
+        errorMessageStep3.style.display = "none";
+        errorMessageStep4.style.display = "none";
+        errorMessageStep5.style.display = "none";
+      }
+
+      return valid;
+    } catch (error) {
+      console.error("Validation error:", error);
+      return false;
+    }
   }
 
-  function handleNextClick(event) {
+  // Modify handleNextClick to properly handle the async validation
+  async function handleNextClick(event) {
+    event.preventDefault();
     
-    if (isCurrentStepValid() === false) {
-      console.log("isCurrentStepValid", isCurrentStepValid());
-      event.preventDefault();
-      return;
-    }
-    if (currentStep < steps.length - 1) { 
-      currentStep++;
-      showStep(currentStep);
+    try {
+      const isValid = await isCurrentStepValid();
+      
+      if (!isValid) {
+        return;
+      }
+
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        showStep(currentStep);
+      }
+    } catch (error) {
+      console.error("Error in handleNextClick:", error);
     }
   }
 
@@ -933,22 +944,6 @@ document.addEventListener("DOMContentLoaded", function () {
       currentStep--;
       showStep(currentStep);
     }
-  }
-
-  function enforceCheckboxLimit(selector, errorElement) {
-    document.querySelectorAll(selector).forEach((checkbox) => {
-      checkbox.addEventListener("change", () => {
-        const checkedBoxes = document.querySelectorAll(`${selector}:checked`);
-        if (checkedBoxes.length > 2) {
-          errorElement.textContent = "You can select up to 2 options only.";
-          errorElement.style.display = "block";
-          checkbox.checked = false;
-          setTimeout(() => {
-            errorElement.style.display = "none";
-          }, 4000);
-        }
-      });
-    });
   }
 
   function attachEventListeners() {
@@ -961,22 +956,10 @@ document.addEventListener("DOMContentLoaded", function () {
       btn.removeEventListener("click", handlePrevClick);
       btn.addEventListener("click", handlePrevClick);
     });
-
-    enforceCheckboxLimit(".card_select_checkbox", errorMessageStep2);
-    enforceCheckboxLimit(".custom-checkbox-input", errorMessageStep3);
   }
 
   attachEventListeners();
   showStep(currentStep);
-
-  document.querySelector("form")?.addEventListener(
-    "submit",
-    (e) => {
-      e.preventDefault();
-      return false;
-    },
-    true
-  );
 
   // Add this near the top of your file
   const paymentStyles = document.createElement("style");
