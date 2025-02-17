@@ -57,6 +57,7 @@ function onboardingHook({ current, index }) {
     populateOnboardingSurveyStep2();
   } else if (index === 3) {
     getStep2Answers();
+    recommendCourses();
     populateSummary();
   } else if (index === 4) {
     populateContraindications();
@@ -145,10 +146,10 @@ async function fetchContraindications() {
 
 
 function getFilteredContraindications() {
-  const selectedCourses = getFromStorage("selectedCourses", []);
+  const recommendedCourses = getFromStorage("recommendedCourses", []);
   const contraindications = getFromStorage("contraindications", []);
   return contraindications.filter((contraindication) =>
-    selectedCourses.includes(contraindication.course_slug)
+    recommendedCourses.includes(contraindication.course_slug)
   );
 }
 
@@ -176,14 +177,14 @@ async function fetchOnboardingSurvey() {
 
 
 async function populateOnboardingSurveyStep1() {
-  const selectedCourses = getFromStorage("selectedCourses", []);
+
   const onboardingSurvey = getFromStorage("onboardingSurvey", [])?.[0]?.answers;
 
   if (onboardingSurvey.length) {
     const container = document.querySelector("#coursesContainer");
     container.innerHTML = "";
     onboardingSurvey
-      // .filter((item) => selectedCourses.includes(item.type))
+      
       .forEach((data) => {
         const item = renderCourseItem(data.id, data.type, data.text, data.image_cover.filename);
         container.appendChild(item);
@@ -230,6 +231,7 @@ function getStep1Answers() {
   setToStorage("onboardingSurveyAnswers_1", answeredIds.map((id) => ({id, type: onboardingSurvey.find((item) => item.id === id)?.type})));
 }
 
+
 function renderOnboardingSurveyItem(id, type, text) {
   const template = document.createElement("template");
   template.innerHTML = `
@@ -248,7 +250,7 @@ async function populateOnboardingSurveyStep2() {
     const container = document.querySelector("#onboardingSurvey");
     container.innerHTML = "";
     onboardingSurvey
-    //  .filter((item) => selectedCourses.includes(item.type))
+    
       .forEach((data) => {
         const item = renderOnboardingSurveyItem(data.id, data.type, data.text);
         container.appendChild(item);
@@ -294,9 +296,9 @@ function renderCardResult(imageSrc, title, text, color) {
 function populateSummary() {
   const container = document.querySelector("#summary");
   const filteredCourses = getFromStorage("courses", []);
-  const selectedCourses = getFromStorage("selectedCourses", []);
+  const recommendedCourses = getFromStorage("recommendedCourses", []);
   filteredCourses.forEach((course) => {
-    if (selectedCourses.includes(course.slug)) {
+    if (recommendedCourses.includes(course.slug)) {
       container.prepend(
         renderCardResult(
           "https://cdn.prod.website-files.com/676e8e3a573b707f2be07685/677d7fc464ea793a4794a3a2_image%20112.webp",
@@ -310,6 +312,16 @@ function populateSummary() {
   fillSummaryStepData();
 }
 
+function recommendCourses() {
+  const answers_1 = getFromStorage("onboardingSurveyAnswers_1", []);
+  const answers_2 = getFromStorage("onboardingSurveyAnswers_2", []);
+  
+
+
+  const recommendedCourses = courses.filter((course) => course.recommendation_description);
+  setToStorage("recommendedCourses", recommendedCourses);
+}
+
 function fillSummaryStepData() {
   const takeoverSummary = document.querySelector("#takeoverSummary");
   const selectedHealthProvider = getFromStorage("selectedHealthProvider", "");
@@ -320,18 +332,18 @@ function fillSummaryStepData() {
   price.innerHTML = calculateTotalPrice() + CURRENCY;
 
   const coursesCountElement = document.querySelector("#coursesCount");
-  coursesCountElement.innerHTML = getFromStorage("selectedCourses", []).length;
+  coursesCountElement.innerHTML = getFromStorage("recommendedCourses", []).length;
 }
 
 function populateContraindications() {
   const container = document.querySelector(".dropdown_padding");
 
   const filteredCourses = getFromStorage("courses", []);
-  const selectedCourses = getFromStorage("selectedCourses", []);
+  const recommendedCourses = getFromStorage("recommendedCourses", []);
   const contraindications = getFromStorage("contraindications", []);
 
   filteredCourses.forEach((course) => {
-    if (selectedCourses.includes(course.slug)) {
+    if (recommendedCourses.includes(course.slug)) {
       const item = renderContraindicationItem(
         course.slug,
         course.name,
@@ -363,11 +375,11 @@ function renderContraindicationItem(slug, name, contraindications) {
 
 function calculateTotalPrice() {
   const pricing = getFromStorage("pricing", {});
-  const selectedCourses = getFromStorage("selectedCourses", []);
+  const recommendedCourses = getFromStorage("recommendedCourses", []);
   
-  if (selectedCourses.length === 2) {
+  if (recommendedCourses.length === 2) {
     return Number(pricing.twoCoursesPrice);
-  } else if (selectedCourses.length === 1) {
+  } else if (recommendedCourses.length === 1) {
     return Number(pricing.singleCoursePrice);
   }
   return 0;
@@ -376,9 +388,9 @@ function calculateTotalPrice() {
 // Add this utility function near the other utility functions
 function calculateDiscountPercentage() {
   const pricing = getFromStorage("pricing", {});
-  const selectedCourses = getFromStorage("selectedCourses", []);
+  const recommendedCourses = getFromStorage("recommendedCourses", []);
   
-  if (selectedCourses.length === 2) {
+  if (recommendedCourses.length === 2) {
     const regularPrice = Number(pricing.singleCoursePrice) * 2;
     const discountedPrice = Number(pricing.twoCoursesPrice);
     const discount = ((regularPrice - discountedPrice) / regularPrice) * 100;
@@ -392,17 +404,17 @@ function populateCheckout() {
   const container = document.querySelector("#productList");
   const totalContainer = document.querySelector("#priceTotal");
   const filteredCourses = getFromStorage("courses", []);
-  const selectedCourses = getFromStorage("selectedCourses", []);
+  const recommendedCourses = getFromStorage("recommendedCourses", []);
   const pricing = getFromStorage("pricing", {});
 
   const discountPercentage = calculateDiscountPercentage();
-  const priceOld = selectedCourses.length === 2 ? Number(pricing.singleCoursePrice) : "";
-  const priceNew = selectedCourses.length === 2 
+  const priceOld = recommendedCourses.length === 2 ? Number(pricing.singleCoursePrice) : "";
+  const priceNew = recommendedCourses.length === 2 
     ? Number(pricing.twoCoursesPrice) / 2 
     : Number(pricing.singleCoursePrice);
 
   filteredCourses.forEach((course) => {
-    if (selectedCourses.includes(course.slug)) {
+    if (recommendedCourses.includes(course.slug)) {
       const item = renderCheckoutItem(
         course.name,
         discountPercentage ? `${discountPercentage}%` : "",
@@ -516,7 +528,7 @@ async function doPayment(amount) {
         body: JSON.stringify({
           amount: amount * 100,
           userId: getFromStorage("createUserResponse", {}).userId,
-          courseSlugs: getFromStorage("selectedCourses", []),
+          courseSlugs: getFromStorage("recommendedCourses", []),
         }),
         headers: {
           "Content-Type": "application/json",
@@ -615,7 +627,7 @@ async function doPayment(amount) {
 async function createUser() {
   try {
     const userData = getFromStorage("userData", {});
-    const selectedCourses = getFromStorage("selectedCourses", []);
+    const recommendedCourses = getFromStorage("recommendedCourses", []);
     const selectedHealthProvider = getFromStorage("selectedHealthProvider", "");
     const healthProviders = getFromStorage("healthProviders", {});
     const onboardingSurveyAnswers_1 = getFromStorage(
@@ -628,7 +640,7 @@ async function createUser() {
     );
 
     // Format the courses data
-    const paidCourses = selectedCourses.map((course) => {
+    const paidCourses = recommendedCourses.map((course) => {
       const validTill = new Date();
       validTill.setFullYear(validTill.getFullYear() + 1);
 
@@ -656,11 +668,11 @@ async function createUser() {
       healthProvider: {
         maxCoursePrice: healthProviderData.maxCoursePrice || "",
         name: selectedHealthProvider,
-        numberOfCourses: selectedCourses.length.toString(),
+        numberOfCourses: recommendedCourses.length.toString(),
         takeover: healthProviderData.takeover || "",
       },
       paidCourses: paidCourses,
-      selectedCourses: selectedCourses.map((course) => course.toUpperCase()),
+      selectedCourses: recommendedCourses.map((course) => course.toUpperCase()),
       onboarding: {
         answers: {
           step1: onboardingSurveyAnswers_1.map((item) => item.type),
