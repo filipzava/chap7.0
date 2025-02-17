@@ -530,7 +530,7 @@ async function doPayment(amount) {
     popupWrap.style.display = "flex";
 
     // Create form for payment submission
-    const form = document.querySelector("#payment_gateway_contain");   
+    const form = document.querySelector(".payment_gateway_contain");   
     // Create submit button
     const submitButton = document.querySelector("#submit_payment");
     
@@ -572,7 +572,7 @@ async function doPayment(amount) {
       } catch (error) {
         console.error("Payment error:", error);
       } finally {
-        window.location.href = window.location.href.replace("onboarding", "vielen-dank");
+        // window.location.href = window.location.href.replace("onboarding", "vielen-dank");
         submitButton.disabled = false;
       }
     });
