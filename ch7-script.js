@@ -325,7 +325,7 @@ function recommendCourses() {
     acc[type] = (acc[type] || 0) + 1;
     return acc;
   }, {});
-
+  console.log({typeCounts});
   // Special case: If user selected only one type
   const uniqueTypes = Object.keys(typeCounts);
   if (uniqueTypes.length === 1) {
