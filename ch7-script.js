@@ -299,7 +299,7 @@ function populateSummary() {
   recommendedCourses.map((course) => {
     const courseData = getFromStorage("courses", [])?.find((item) => item.slug === course);
     if (courseData) {
-      container.prepend(
+      container.appendChild(
         renderCardResult(
           "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Icon-round-Question_mark.svg/240px-Icon-round-Question_mark.svg.png",
           courseData.name,
