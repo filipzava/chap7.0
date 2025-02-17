@@ -473,6 +473,8 @@ async function initializeStripe() {
 // Modify the doPayment function
 async function doPayment(amount) {
   try {
+    const registerButton = document.querySelector("#registerFormSubmitButton").querySelector(".btn_main_text");
+    registerButton.textContent = "Processing ....";
     // Initialize Stripe if not already initialized
     if (!stripe) {
       await initializeStripe();
@@ -571,11 +573,13 @@ async function doPayment(amount) {
       } catch (error) {
         console.error("Payment error:", error);
       } finally {
+        registerButton.textContent = "Pay now";
         // window.location.href = window.location.href.replace("onboarding", "vielen-dank");
         submitButton.disabled = false;
       }
     });
   } catch (error) {
+    
     console.error("Error creating payment:", error);
     throw error;
   }
