@@ -295,16 +295,16 @@ function renderCardResult(imageSrc, title, text, color) {
 
 function populateSummary() {
   const container = document.querySelector("#summary");
-  const filteredCourses = getFromStorage("courses", []);
   const recommendedCourses = getFromStorage("recommendedCourses", []);
-  filteredCourses.forEach((course) => {
-    if (recommendedCourses.includes(course.slug)) {
+  recommendedCourses.map((course) => {
+    const courseData = getFromStorage("courses", [])?.find((item) => item.slug === course);
+    if (courseData) {
       container.prepend(
         renderCardResult(
-          "https://cdn.prod.website-files.com/676e8e3a573b707f2be07685/677d7fc464ea793a4794a3a2_image%20112.webp",
-          course.name,
-          course.recommendation_description,
-          course.course_color
+          courseData.image_cover.filename,
+          courseData.name,
+          courseData.recommendation_description,
+          courseData.course_color
         )
       );
     }
@@ -357,6 +357,7 @@ function recommendCourses() {
     .map(course => course.slug);
 
   setToStorage("recommendedCourses", recommendedCourses);
+  
   return recommendedCourses;
 }
 
