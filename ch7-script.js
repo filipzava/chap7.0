@@ -163,7 +163,7 @@ async function populateOnboardingSurveyStep1() {
     const container = document.querySelector("#coursesContainer");
     container.innerHTML = "";
     onboardingSurvey
-      .filter((item) => selectedCourses.includes(item.type))
+      // .filter((item) => selectedCourses.includes(item.type))
       .forEach((data) => {
         const item = renderCourseItem(data.id, data.type, data.text, data.text, data.image_cover.filename);
         container.appendChild(item);
