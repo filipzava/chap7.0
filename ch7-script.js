@@ -301,7 +301,7 @@ function populateSummary() {
     if (courseData) {
       container.prepend(
         renderCardResult(
-          courseData.image_cover.filename,
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/Icon-round-Question_mark.svg/240px-Icon-round-Question_mark.svg.png",
           courseData.name,
           courseData.recommendation_description,
           courseData.course_color
