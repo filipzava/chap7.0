@@ -348,7 +348,7 @@ function onCourseSelected() {
 function populateSummary() {
   const container = document.querySelector("#summary");
   const recommendedCourses = getFromStorage("recommendedCourses", []);
-  console.log({ container });
+  
   // Clear existing content and event listeners
   // container.innerHTML = '';
 
@@ -426,6 +426,7 @@ function recommendCourses() {
     .map((course) => course.slug);
 
   setToStorage("recommendedCourses", recommendedCourses);
+  setToStorage("selectedCourses", recommendedCourses);
 
   return recommendedCourses;
 }
@@ -447,11 +448,11 @@ function populateContraindications() {
   const container = document.querySelector(".dropdown_padding");
 
   const filteredCourses = getFromStorage("courses", []);
-  const recommendedCourses = getFromStorage("recommendedCourses", []);
+  const selectedCourses = getFromStorage("selectedCourses", []);
   const contraindications = getFromStorage("contraindications", []);
 
   filteredCourses.forEach((course) => {
-    if (recommendedCourses.includes(course.slug)) {
+    if (selectedCourses.includes(course.slug)) {
       const item = renderContraindicationItem(
         course.slug,
         course.name,
@@ -632,16 +633,19 @@ async function doPayment(amount) {
 
     const userData = getFromStorage("userData", {});
 
+    const body = {
+      amount: amount * 100,
+      userId: getFromStorage("createUserResponse", {}).userId,
+      courseSlugs: getFromStorage("selectedCourses", []),
+    };
+
+    setToStorage("paymentIntentPayload", body);
     // Create payment intent with proper error handling
     const response = await fetch(
       "https://us-central1-mind-c3055.cloudfunctions.net/createPaymentIntent",
       {
         method: "POST",
-        body: JSON.stringify({
-          amount: amount * 100,
-          userId: getFromStorage("createUserResponse", {}).userId,
-          courseSlugs: getFromStorage("recommendedCourses", []),
-        }),
+        body: JSON.stringify(body),
         headers: {
           "Content-Type": "application/json",
         },
@@ -654,6 +658,7 @@ async function doPayment(amount) {
       throw new Error(data.message || "Failed to create payment intent");
     }
 
+    setToStorage("paymentIntentResponse", data);
     // Check for client secret in different possible locations
     const clientSecret = data.paymentIntent;
 
