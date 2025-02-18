@@ -336,12 +336,19 @@ function onCourseSelected() {
   const selectedCheckboxes = document.querySelectorAll(
     ".card_result_checkbox:checked"
   );
+  const button = document.querySelector("#result");
 
   const coursesSlugs = Array.from(selectedCheckboxes).map((checkbox) =>
     checkbox.getAttribute("data-value")
   );
-  console.log({ selectedCourses: coursesSlugs });
   setToStorage("selectedCourses", coursesSlugs);
+  if (coursesSlugs.length === 0) {
+    button.disabled = true;
+    button.classList.add("disabled");
+  } else {
+    button.disabled = false;
+    button.classList.remove("disabled");
+  }
   fillSummaryData();
 }
 
