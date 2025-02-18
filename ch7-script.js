@@ -346,59 +346,6 @@ function renderCardResult(imageSrc, title, text, color, slug) {
   return element;
 }
 
-function onCourseSelected() {
-  const selectedCheckboxes = document.querySelectorAll(
-    ".card_result_checkbox:checked"
-  );
-  const button = document.querySelector("#result");
-
-  const coursesSlugs = Array.from(selectedCheckboxes).map((checkbox) =>
-    checkbox.getAttribute("data-value")
-  );
-  setToStorage("selectedCourses", coursesSlugs);
-  if (coursesSlugs.length === 0) {
-    button.disabled = true;
-    button.classList.add("disabled");
-  } else {
-    button.disabled = false;
-    button.classList.remove("disabled");
-  }
-  fillSummaryData();
-}
-
-function populateSummary() {
-  const container = document.querySelector("#summary");
-  const recommendedCourses = getFromStorage("recommendedCourses", []);
-  
-  // Clear existing content and event listeners
-  // container.innerHTML = '';
-
-  // Add courses in reverse order
-  recommendedCourses.reverse().map((course) => {
-    const courseData = getFromStorage("courses", [])?.find(
-      (item) => item.slug === course
-    );
-    if (courseData) {
-      container.prepend(
-        renderCardResult(
-          courseData.course_cover,
-          courseData.name,
-          courseData.recommendation_description,
-          courseData.course_color,
-          courseData.slug
-        )
-      );
-    }
-  });
-
-  // Add change event listener to the container
-  container.addEventListener("change", (event) => {
-    // Check if the changed element is a checkbox
-    if (event.target.classList.contains("card_result_checkbox")) {
-      onCourseSelected();
-    }
-  });
-}
 
 function recommendCourses() {
   const answers_1 = getFromStorage("onboardingSurveyAnswers_1", []);
@@ -486,6 +433,58 @@ function populateContraindications() {
   });
 }
 
+function onCourseSelected() {
+  const selectedCheckboxes = document.querySelectorAll(
+    ".card_result_checkbox:checked"
+  );
+  const button = document.querySelector("#result");
+
+  const coursesSlugs = Array.from(selectedCheckboxes).map((checkbox) =>
+    checkbox.getAttribute("data-value")
+  );
+  setToStorage("selectedCourses", coursesSlugs);
+  if (coursesSlugs.length === 0) {
+    button.disabled = true;
+    button.classList.add("disabled");
+  } else {
+    button.disabled = false;
+    button.classList.remove("disabled");
+  }
+  fillSummaryData();
+}
+
+function populateSummary() {
+  const container = document.querySelector("#summary");
+  const recommendedCourses = getFromStorage("recommendedCourses", []);
+  
+  // Add courses in reverse order
+  recommendedCourses.reverse().map((course) => {
+    const courseData = getFromStorage("courses", [])?.find(
+      (item) => item.slug === course
+    );
+    if (courseData) {
+      container.prepend(
+        renderCardResult(
+          courseData.course_cover,
+          courseData.name,
+          courseData.recommendation_description,
+          courseData.course_color,
+          courseData.slug
+        )
+      );
+    }
+  });
+
+  // Add change event listener to the container
+  container.addEventListener("change", (event) => {
+    // Check if the changed element is a checkbox
+    if (event.target.classList.contains("card_result_checkbox")) {
+      onCourseSelected();
+    }
+  });
+}
+
+
 function renderContraindicationItem(slug, name, contraindications) {
   const template = document.createElement("template");
   template.innerHTML = `
@@ -534,19 +533,19 @@ function populateCheckout() {
   const container = document.querySelector("#productList");
   const totalContainer = document.querySelector("#priceTotal");
   const filteredCourses = getFromStorage("courses", []);
-  const recommendedCourses = getFromStorage("recommendedCourses", []);
+  const selectedCourses = getFromStorage("selectedCourses", []);
   const pricing = getFromStorage("pricing", {});
 
   const discountPercentage = calculateDiscountPercentage();
   const priceOld =
-    recommendedCourses.length === 2 ? Number(pricing.singleCoursePrice) : "";
+    selectedCourses.length === 2 ? Number(pricing.singleCoursePrice) : "";
   const priceNew =
-    recommendedCourses.length === 2
+    selectedCourses.length === 2
       ? Number(pricing.twoCoursesPrice) / 2
       : Number(pricing.singleCoursePrice);
 
   filteredCourses.forEach((course) => {
-    if (recommendedCourses.includes(course.slug)) {
+    if (selectedCourses.includes(course.slug)) {
       const item = renderCheckoutItem(
         course.name,
         discountPercentage ? `${discountPercentage}%` : "",
