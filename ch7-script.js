@@ -373,7 +373,7 @@ function populateSummary() {
   // Add change event listener to the container
   container.addEventListener("change", (event) => {
     // Check if the changed element is a checkbox
-    if (event.target.classList.contains("course_select_checkbox")) {
+    if (event.target.classList.contains("card_result_checkbox")) {
       onCourseSelected();
     }
   });
