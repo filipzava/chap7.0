@@ -301,7 +301,7 @@ function getStep2Answers() {
   );
 }
 
-function renderCardResult(imageSrc, title, text, color, slug) {
+function renderCardResult(imageSrc, title, text, color, slug, checked = false) {
   const template = document.createElement("template");
   template.innerHTML = `
     <label class="w-checkbox card_result">
@@ -316,7 +316,8 @@ function renderCardResult(imageSrc, title, text, color, slug) {
              name="checkout" 
              data-name="checkout" 
              data-value="${slug}" 
-             class="w-checkbox-input card_result_checkbox">
+             class="w-checkbox-input card_result_checkbox"
+             ${checked ? "checked" : ""}>
       <span class="card_select_label w-form-label"></span>
       <div class="card_result_content u-vflex-stretch-top u-gap-2">
         <div class="card_result_h_wrap u-hflex-between-top u-gap-4">
@@ -470,11 +471,13 @@ function populateSummary() {
           courseData.name,
           courseData.recommendation_description,
           courseData.course_color,
-          courseData.slug
+          courseData.slug,
+          true
         )
       );
     }
   });
+  
 
   // Add change event listener to the container
   container.addEventListener("change", (event) => {
@@ -483,6 +486,7 @@ function populateSummary() {
       onCourseSelected();
     }
   });
+  onCourseSelected();
 }
 
 
