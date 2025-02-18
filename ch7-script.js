@@ -310,7 +310,7 @@ function renderCardResult(imageSrc, title, text, color, slug) {
             <img src="${imageSrc}" loading="lazy" sizes="100vw" alt="" class="card_select_img">
           </div>
           <div class="card_result_content u-vflex-stretch-top u-gap-2">
-            <input type="checkbox" name="checkout" data-name="checkout" data-value="${slug}" class="w-checkbox-input card_select_checkbox">
+            <input type="checkbox" name="checkout" data-name="checkout" data-value="${slug}" class="w-checkbox-input course_select_checkbox">
             <div class="card_result_h_wrap u-hflex-between-center u-gap-4">
               <h4>${title}</h4>
               <div class="icon_small is-checkmark" style="background-color: ${color}">
@@ -326,9 +326,27 @@ function renderCardResult(imageSrc, title, text, color, slug) {
   return template.content.firstElementChild;
 }
 
+function onCourseSelected() {
+  const selectedCheckboxes = document.querySelectorAll(
+    ".course_select_checkbox:checked"
+  );
+
+  const coursesSlugs = Array.from(selectedCheckboxes).map((checkbox) =>
+    checkbox.getAttribute("data-value")
+  );
+  console.log({selectedCourses: coursesSlugs});
+  setToStorage("selectedCourses", coursesSlugs);
+  fillSummaryData();
+}
+
 function populateSummary() {
   const container = document.querySelector("#summary");
   const recommendedCourses = getFromStorage("recommendedCourses", []);
+
+  // Clear existing content and event listeners
+  container.innerHTML = '';
+  
+  // Add courses in reverse order
   recommendedCourses.reverse().map((course) => {
     const courseData = getFromStorage("courses", [])?.find((item) => item.slug === course);
     if (courseData) {
@@ -338,13 +356,20 @@ function populateSummary() {
           courseData.name,
           courseData.recommendation_description,
           courseData.course_color,
-
           courseData.slug
         )
       );
     }
   });
-  fillSummaryStepData();
+
+  // Add change event listener to the container
+  container.addEventListener('change', (event) => {
+    // Check if the changed element is a checkbox
+    if (event.target.classList.contains('course_select_checkbox')) {
+      onCourseSelected();
+    }
+  });
+
 }
 
 function recommendCourses() {
@@ -396,7 +421,7 @@ function recommendCourses() {
   return recommendedCourses;
 }
 
-function fillSummaryStepData() {
+function fillSummaryData() {
   const takeoverSummary = document.querySelector("#takeoverSummary");
   const selectedHealthProvider = getFromStorage("selectedHealthProvider", "");
   const healthProviders = getFromStorage("healthProviders", {});
@@ -406,7 +431,7 @@ function fillSummaryStepData() {
   price.innerHTML = calculateTotalPrice() + CURRENCY;
 
   const coursesCountElement = document.querySelector("#coursesCount");
-  coursesCountElement.innerHTML = getFromStorage("recommendedCourses", []).length;
+  coursesCountElement.innerHTML = getFromStorage("selectedCourses", []).length;
 }
 
 function populateContraindications() {
@@ -449,11 +474,11 @@ function renderContraindicationItem(slug, name, contraindications) {
 
 function calculateTotalPrice() {
   const pricing = getFromStorage("pricing", {});
-  const recommendedCourses = getFromStorage("recommendedCourses", []);
+  const selectedCourses = getFromStorage("selectedCourses", []);
   
-  if (recommendedCourses.length === 2) {
+  if (selectedCourses.length === 2) {
     return Number(pricing.twoCoursesPrice);
-  } else if (recommendedCourses.length === 1) {
+  } else if (selectedCourses.length === 1) {
     return Number(pricing.singleCoursePrice);
   }
   return 0;
@@ -462,9 +487,9 @@ function calculateTotalPrice() {
 // Add this utility function near the other utility functions
 function calculateDiscountPercentage() {
   const pricing = getFromStorage("pricing", {});
-  const recommendedCourses = getFromStorage("recommendedCourses", []);
+  const selectedCourses = getFromStorage("selectedCourses", []);
   
-  if (recommendedCourses.length === 2) {
+  if (selectedCourses.length === 2) {
     const regularPrice = Number(pricing.singleCoursePrice) * 2;
     const discountedPrice = Number(pricing.twoCoursesPrice);
     const discount = ((regularPrice - discountedPrice) / regularPrice) * 100;
