@@ -302,7 +302,7 @@ function getStep2Answers() {
   setToStorage("onboardingSurveyAnswers_2", surveyAnswers.map((id) => ({id, type: onboardingSurvey.find((item) => item.id === id)?.type})));
 }
 
-function renderCardResult(imageSrc, title, text, color) {
+function renderCardResult(imageSrc, title, text, color, id, slug) {
   const template = document.createElement("template");
   template.innerHTML = `
         <div class="card_result">
@@ -310,6 +310,7 @@ function renderCardResult(imageSrc, title, text, color) {
             <img src="${imageSrc}" loading="lazy" sizes="100vw" alt="" class="card_select_img">
           </div>
           <div class="card_result_content u-vflex-stretch-top u-gap-2">
+            <input type="checkbox" data-id="${id}" name="checkout" data-name="checkout" data-value="${slug}" class="w-checkbox-input card_select_checkbox">
             <div class="card_result_h_wrap u-hflex-between-center u-gap-4">
               <h4>${title}</h4>
               <div class="icon_small is-checkmark" style="background-color: ${color}">
@@ -336,7 +337,9 @@ function populateSummary() {
           courseData.course_cover,
           courseData.name,
           courseData.recommendation_description,
-          courseData.course_color
+          courseData.course_color,
+          courseData.id,
+          courseData.slug
         )
       );
     }
