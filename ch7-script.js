@@ -322,7 +322,7 @@ function renderCardResult(imageSrc, title, text, color, slug, checked = false) {
       <div class="card_result_content u-vflex-stretch-top u-gap-2">
         <div class="card_result_h_wrap u-hflex-between-top u-gap-4">
           <h4>${title}</h4>
-          <div class="icon_small is-checkmark" style="background-color: ${DEFAULT_CHECKMARK_COLOR}">
+          <div class="icon_small is-checkmark" style="background-color: ${checked ? color : DEFAULT_CHECKMARK_COLOR}">
             <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 22 22" fill="none">
               <path d="M9.16667 15.0334L5.5 11.3667L6.78333 10.0834L9.16667 12.4667L15.2167 6.41675L16.5 7.70008L9.16667 15.0334Z" fill="currentColor"></path>
             </svg>
@@ -337,7 +337,7 @@ function renderCardResult(imageSrc, title, text, color, slug, checked = false) {
   const checkmark = element.querySelector('.icon_small.is-checkmark');
   
   // Set initial color (gray)
-  checkmark.style.backgroundColor = DEFAULT_CHECKMARK_COLOR;
+  checkmark.style.backgroundColor = checked ? color : DEFAULT_CHECKMARK_COLOR;
   
   // Add change event listener
   checkbox.addEventListener('change', function() {
