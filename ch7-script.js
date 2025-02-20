@@ -886,8 +886,16 @@ document.addEventListener("DOMContentLoaded", function () {
   const errorMessageStep5 = document.getElementById("error_message_step5");
 
   let currentStep = 0;
+  const stepMaps = {
+    0: "step1",
+    1: "step2",
+    2: "step2",
+    3: "step3",
+    4: "step3",
+  };
 
   function showStep(index) {
+    document.querySelector(stepMaps[index]).classList.add("active");
     steps.forEach((step) => {
       step.classList.remove("active");
       step.style.display = "none";
@@ -1108,7 +1116,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Modify handleNextClick to properly handle the async validation
   async function handleNextClick(event) {
-    console.log("handleNextClick");
+    
     event.preventDefault();
 
     try {
