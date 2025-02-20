@@ -898,7 +898,9 @@ document.addEventListener("DOMContentLoaded", function () {
     
     steps.forEach((step, i) => {
       step.classList.remove("active");
-      document.querySelector(stepMaps[i])?.classList.remove("active");
+      if (i < index) {
+        document.querySelector(stepMaps[i])?.classList.remove("active");
+      }
       step.style.display = "none";
     });
 
