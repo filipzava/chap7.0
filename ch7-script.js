@@ -15,7 +15,7 @@ const dictionary = {
   "error.privacyPolicy": "Bitte stimmen Sie der Datenschutzerklärung zu",
   "error.requiredFields": "Bitte füllen Sie alle erforderlichen Felder aus",
   "error.healthProvider": "Bitte wählen Sie eine Krankenkasse aus",
-  "error.selectOptions": "Bitte wählen Sie 1 oder 2 Optionen aus",
+  "error.selectOptions": "Bitte wählen Sie mehr als 1 Option aus" ,
   "error.agreeToTerms": "Bitte stimmen Sie beiden Bedingungen zu",
   "select.healthProvider": "Bitte Krankenkasse wählen",
   "select.namePrefix.mr": "Herr",
@@ -951,10 +951,12 @@ document.addEventListener("DOMContentLoaded", function () {
           const checkboxesStep3 = document.querySelectorAll(
             ".custom-checkbox-input:checked"
           );
-          if (checkboxesStep3.length < 1 || checkboxesStep3.length > 2) {
+          
+          if (checkboxesStep3.length < 1) {
             valid = false;
             errorMessages.push(dictionary["error.selectOptions"]);
           }
+          
           break;
 
         case 4:
