@@ -445,12 +445,17 @@ function onCourseSelected() {
   );
   setToStorage("selectedCourses", coursesSlugs);
   if (coursesSlugs.length === 0) {
-    button.classList.add("disabled");
-    button.querySelector(".g_clickable_btn").disabled = true;
-      
+    if (button) {
+      button.classList.add("disabled");
+      const btn = button.querySelector(".g_clickable_btn");
+      if (btn) btn.disabled = true;
+    }
   } else {
-    button.classList.remove("disabled");
-    button.querySelector(".g_clickable_btn").disabled = false;
+    if (button) {
+      button.classList.remove("disabled");
+      const btn = button.querySelector(".g_clickable_btn");
+      if (btn) btn.disabled = false;
+    }
   }
   fillSummaryData();
 }
