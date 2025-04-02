@@ -304,7 +304,7 @@ function getStep2Answers() {
 function renderCardResult(imageSrc, title, text, color, slug, checked = false) {
   const template = document.createElement("template");
   template.innerHTML = `
-    <label class="w-checkbox card_result">
+    <label lang="de" class="w-checkbox card_result">
       <div class="card_form_img_contain">
         <img sizes="100vw" 
              src="${imageSrc}" 
@@ -321,7 +321,7 @@ function renderCardResult(imageSrc, title, text, color, slug, checked = false) {
       <span class="card_select_label w-form-label"></span>
       <div class="card_result_content u-vflex-stretch-top u-gap-2">
         <div class="card_result_h_wrap u-hflex-between-top u-gap-4">
-          <h4>${title}</h4>
+          <h4 style="max-width: 210px; hyphens: auto;">${title}</h4>
           <div class="icon_small is-checkmark" style="background-color: ${checked ? color : DEFAULT_CHECKMARK_COLOR}">
             <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 22 22" fill="none">
               <path d="M9.16667 15.0334L5.5 11.3667L6.78333 10.0834L9.16667 12.4667L15.2167 6.41675L16.5 7.70008L9.16667 15.0334Z" fill="currentColor"></path>
