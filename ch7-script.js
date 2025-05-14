@@ -15,7 +15,7 @@ const dictionary = {
   "error.privacyPolicy": "Bitte stimmen Sie der Datenschutzerklärung zu",
   "error.requiredFields": "Bitte füllen Sie alle erforderlichen Felder aus",
   "error.healthProvider": "Bitte wählen Sie eine Krankenkasse aus",
-  "error.selectOptions": "Bitte wählen Sie mehr als 1 Option aus" ,
+  "error.selectOptions": "Bitte wählen Sie mehr als 1 Option aus",
   "error.agreeToTerms": "Bitte stimmen Sie beiden Bedingungen zu",
   "select.healthProvider": "Bitte Krankenkasse wählen",
   "select.namePrefix.mr": "Herr",
@@ -322,7 +322,9 @@ function renderCardResult(imageSrc, title, text, color, slug, checked = false) {
       <div class="card_result_content u-vflex-stretch-top u-gap-2">
         <div class="card_result_h_wrap u-hflex-between-top u-gap-4">
           <h4 style="max-width: 210px; hyphens: auto;">${title}</h4>
-          <div class="icon_small is-checkmark" style="background-color: ${checked ? color : DEFAULT_CHECKMARK_COLOR}">
+          <div class="icon_small is-checkmark" style="background-color: ${
+            checked ? color : DEFAULT_CHECKMARK_COLOR
+          }">
             <svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 22 22" fill="none">
               <path d="M9.16667 15.0334L5.5 11.3667L6.78333 10.0834L9.16667 12.4667L15.2167 6.41675L16.5 7.70008L9.16667 15.0334Z" fill="currentColor"></path>
             </svg>
@@ -333,20 +335,21 @@ function renderCardResult(imageSrc, title, text, color, slug, checked = false) {
     </label>`;
 
   const element = template.content.firstElementChild;
-  const checkbox = element.querySelector('.card_result_checkbox');
-  const checkmark = element.querySelector('.icon_small.is-checkmark');
-  
+  const checkbox = element.querySelector(".card_result_checkbox");
+  const checkmark = element.querySelector(".icon_small.is-checkmark");
+
   // Set initial color (gray)
   checkmark.style.backgroundColor = checked ? color : DEFAULT_CHECKMARK_COLOR;
-  
+
   // Add change event listener
-  checkbox.addEventListener('change', function() {
-    checkmark.style.backgroundColor = this.checked ? color : DEFAULT_CHECKMARK_COLOR;
+  checkbox.addEventListener("change", function () {
+    checkmark.style.backgroundColor = this.checked
+      ? color
+      : DEFAULT_CHECKMARK_COLOR;
   });
 
   return element;
 }
-
 
 function recommendCourses() {
   const answers_1 = getFromStorage("onboardingSurveyAnswers_1", []);
@@ -415,7 +418,7 @@ function fillSummaryData() {
   const trialButton = document.querySelector("#button_trial");
   trialButton.setAttribute("data-btn-next", "");
   trialButton.addEventListener("click", () => {
-   setToStorage("trial", true);
+    setToStorage("trial", true);
   });
 }
 
@@ -469,7 +472,7 @@ function onCourseSelected() {
 function populateSummary() {
   const container = document.querySelector("#summary");
   const recommendedCourses = getFromStorage("recommendedCourses", []);
-  
+
   // Add courses in reverse order
   recommendedCourses.reverse().map((course) => {
     const courseData = getFromStorage("courses", [])?.find(
@@ -488,7 +491,6 @@ function populateSummary() {
       );
     }
   });
-  
 
   // Add change event listener to the container
   container.addEventListener("change", (event) => {
@@ -499,7 +501,6 @@ function populateSummary() {
   });
   onCourseSelected();
 }
-
 
 function renderContraindicationItem(slug, name, contraindications) {
   const template = document.createElement("template");
@@ -550,7 +551,7 @@ function populateCheckout() {
   if (getFromStorage("trial", false)) {
     const container = document.querySelectorAll(".recap_final_contain")[1];
     container.innerHTML = `
-     <button type="submit" data-btn-submit="" class="g_clickable_btn"><span class="g_clickable_text u-sr-only">Kurseinheit ausprobieren</span></button>
+     <div class="result_btn_contain u-mt-4 u-mb-2"><div data-button-style="primary" class="btn_main_wrap"><div class="g_clickable_wrap"><a id="button_purchase_onb_recommendation" target="" href="#" class="g_clickable_link w-inline-block"><span class="g_clickable_text u-sr-only">Kurseinheit ausprobieren</span></a><button type="button" data-btn-next="" class="g_clickable_btn"><span class="g_clickable_text u-sr-only">Kurseinheit ausprobieren</span></button></div><div aria-hidden="true" class="btn_main_text">Kurseinheit ausprobieren</div></div></div>
     `;
     return;
   }
@@ -896,7 +897,10 @@ document.addEventListener("DOMContentLoaded", function () {
     ".form_step_wrap .form_step, .form_step_popup"
   );
   const prevBtns = document.querySelectorAll("[data-btn-prev]");
-  const nextBtns = [...document.querySelectorAll("[data-btn-next]"), document.querySelector("#button_trial")];
+  const nextBtns = [
+    ...document.querySelectorAll("[data-btn-next]"),
+    document.querySelector("#button_trial"),
+  ];
   const submitBtn = document.querySelector("[data-btn-submit]");
   const errorMessageStep1 = document.getElementById("error_message_step1");
   const errorMessageStep2 = document.getElementById("error_message");
@@ -915,7 +919,6 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   function showStep(index) {
-    
     steps.forEach((step, i) => {
       step.classList.remove("active");
       if (i > index) {
@@ -971,12 +974,12 @@ document.addEventListener("DOMContentLoaded", function () {
           const checkboxesStep3 = document.querySelectorAll(
             ".custom-checkbox-input:checked"
           );
-          
+
           if (checkboxesStep3.length < 1) {
             valid = false;
             errorMessages.push(dictionary["error.selectOptions"]);
           }
-          
+
           break;
 
         case 4:
@@ -1096,8 +1099,8 @@ document.addEventListener("DOMContentLoaded", function () {
           if (valid) {
             setToStorage("userData", formData);
             if (getFromStorage("trial", false)) {
-             await createTrialUser();
-              return
+              await createTrialUser();
+              return;
             }
             await createUser();
             await doPayment(calculateTotalPrice());
@@ -1146,7 +1149,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Modify handleNextClick to properly handle the async validation
   async function handleNextClick(event) {
-    
     event.preventDefault();
 
     try {
@@ -1189,26 +1191,31 @@ document.addEventListener("DOMContentLoaded", function () {
   showStep(currentStep);
 });
 
-
 async function createTrialUser() {
   try {
     const userData = getFromStorage("userData", {});
     const recommendedCourses = getFromStorage("recommendedCourses", []);
     const selectedHealthProvider = getFromStorage("selectedHealthProvider", "");
     const healthProviders = getFromStorage("healthProviders", {});
-    const onboardingSurveyAnswers_1 = getFromStorage("onboardingSurveyAnswers_1", []);
-    const onboardingSurveyAnswers_2 = getFromStorage("onboardingSurveyAnswers_2", []);
+    const onboardingSurveyAnswers_1 = getFromStorage(
+      "onboardingSurveyAnswers_1",
+      []
+    );
+    const onboardingSurveyAnswers_2 = getFromStorage(
+      "onboardingSurveyAnswers_2",
+      []
+    );
 
     const trialValidTill = new Date();
     trialValidTill.setDate(trialValidTill.getDate() + 14);
     const trialValidTillStr = trialValidTill.toISOString().split("T")[0];
 
-    const paidCourses = recommendedCourses.map(course => ({
+    const paidCourses = recommendedCourses.map((course) => ({
       course: course.toUpperCase(),
       status: "not-active",
       validTill: null,
       isTrial: true,
-      trialValidTill: trialValidTillStr
+      trialValidTill: trialValidTillStr,
     }));
 
     const healthProviderData = healthProviders[selectedHealthProvider];
@@ -1229,11 +1236,11 @@ async function createTrialUser() {
         takeover: healthProviderData?.takeover || "",
       },
       paidCourses,
-      selectedCourses: recommendedCourses.map(course => course.toUpperCase()),
+      selectedCourses: recommendedCourses.map((course) => course.toUpperCase()),
       onboarding: {
         answers: {
-          step1: onboardingSurveyAnswers_1.map(item => item.type),
-          step2: onboardingSurveyAnswers_2.map(item => item.type),
+          step1: onboardingSurveyAnswers_1.map((item) => item.type),
+          step2: onboardingSurveyAnswers_2.map((item) => item.type),
         },
       },
     };
@@ -1250,7 +1257,8 @@ async function createTrialUser() {
     setToStorage("createUserResponse", data);
     setToStorage("userId", data.userId);
 
-    if (!response.ok) throw new Error(data.message || "Failed to create trial user");
+    if (!response.ok)
+      throw new Error(data.message || "Failed to create trial user");
 
     window.location.href = window.location.href.replace(
       "onboarding",
