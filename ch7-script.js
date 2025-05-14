@@ -411,6 +411,12 @@ function fillSummaryData() {
 
   const coursesCountElement = document.querySelector("#coursesCount");
   coursesCountElement.innerHTML = getFromStorage("selectedCourses", []).length;
+
+  const trialButton = document.querySelector("#button_trial");
+  trialButton.setAttribute("data-btn-next", "");
+  trialButton.addEventListener("click", () => {
+   setToStorage("trial", true);
+  });
 }
 
 function populateContraindications() {
