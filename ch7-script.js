@@ -416,7 +416,6 @@ function fillSummaryData() {
   coursesCountElement.innerHTML = getFromStorage("selectedCourses", []).length;
 
   const trialButton = document.querySelector("#button_trial");
-  trialButton.setAttribute("data-btn-next", "");
   trialButton.addEventListener("click", () => {
     setToStorage("trial", true);
   });
@@ -470,7 +469,6 @@ function onCourseSelected() {
 }
 
 function populateSummary() {
-  setToStorage("trial", false);
   const container = document.querySelector("#summary");
   const recommendedCourses = getFromStorage("recommendedCourses", []);
 
@@ -548,12 +546,13 @@ function calculateDiscountPercentage() {
 
 // Update populateCheckout to use the new utility function
 function populateCheckout() {
-  
   if (getFromStorage("trial", false)) {
     const container = document.querySelectorAll(".recap_final_contain")[1];
     container.innerHTML = `
-     <div class="result_btn_contain u-mt-4 u-mb-2"><div data-button-style="primary" class="btn_main_wrap"><div class="g_clickable_wrap"><a id="button_purchase_onb_recommendation" target="" href="#" class="g_clickable_link w-inline-block"><span class="g_clickable_text u-sr-only">Kurseinheit ausprobieren</span></a><button type="button" data-btn-next="" class="g_clickable_btn"><span class="g_clickable_text u-sr-only">Kurseinheit ausprobieren</span></button></div><div aria-hidden="true" class="btn_main_text">Kurseinheit ausprobieren</div></div></div>
+     <div class="result_btn_contain u-mt-4 u-mb-2"><div data-button-style="primary" class="btn_main_wrap"><div class="g_clickable_wrap"><a id="button_trial_submit" target="" href="#" class="g_clickable_link w-inline-block"><span class="g_clickable_text u-sr-only">Kurseinheit ausprobieren</span></a><button type="button" data-btn-next="" class="g_clickable_btn"><span class="g_clickable_text u-sr-only">Kurseinheit ausprobieren</span></button></div><div aria-hidden="true" class="btn_main_text">Kurseinheit ausprobieren</div></div></div>
     `;
+    const trialButton = document.querySelector("#button_trial_submit");
+    trialButton.addEventListener("click", handleNextClick);
     return;
   }
   const container = document.querySelector("#productList");
