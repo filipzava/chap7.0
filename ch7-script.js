@@ -670,7 +670,7 @@ async function doPayment(amount) {
   try {
     const registerButton = document
       .querySelector("#registerFormSubmitButton")
-      .querySelector(".btn_main_text");
+      //.querySelector(".btn_main_text");
     registerButton.textContent = dictionary["payment.processing"];
     const errorDiv = document.querySelector("#error_message_payment");
 
@@ -862,7 +862,7 @@ async function createUser() {
 
     const data = await response.json();
 
-    if (data.message) {
+    if (data.success === false && data.message) {
       errorDiv.style.display = "block";
       errorDiv.textContent = `${data.message} <br/> ${data.error}`;
     }
