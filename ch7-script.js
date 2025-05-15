@@ -565,6 +565,15 @@ function populateCheckout() {
     }
   });
 
+    
+  const priceOld =
+    selectedCourses.length === 2 ? Number(pricing.singleCoursePrice) : "";
+  const priceNew =
+    selectedCourses.length === 2
+      ? Number(pricing.twoCoursesPrice) / 2
+      : Number(pricing.singleCoursePrice);
+
+
   if (getFromStorage("trial", false)) {
     const container = document.querySelector(".price_total");
     container.innerHTML = ''
@@ -574,13 +583,6 @@ function populateCheckout() {
     });
     return;
   }
-  
-  const priceOld =
-    selectedCourses.length === 2 ? Number(pricing.singleCoursePrice) : "";
-  const priceNew =
-    selectedCourses.length === 2
-      ? Number(pricing.twoCoursesPrice) / 2
-      : Number(pricing.singleCoursePrice);
 
 
   totalContainer.innerHTML = calculateTotalPrice().toFixed(2) + CURRENCY;
