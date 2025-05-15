@@ -559,6 +559,17 @@ function populateCheckout() {
       ? Number(pricing.twoCoursesPrice) / 2
       : Number(pricing.singleCoursePrice);
 
+  if (getFromStorage("trial", false)) {
+    const container = document.querySelector(".price_total");
+    container.innerHTML = "";
+    const buttons = Array.from(
+      document.querySelectorAll(".btn_main_text")
+    ).filter((btn) => btn.textContent === "Jetzt kaufen");
+    buttons.forEach((button) => {
+      button.innerHTML = "Kurseinheit ausprobieren";
+    });
+    return;
+  }
   const discountPercentage = calculateDiscountPercentage();
   filteredCourses.forEach((course) => {
     if (selectedCourses.includes(course.slug)) {
@@ -571,19 +582,6 @@ function populateCheckout() {
       container.appendChild(item);
     }
   });
-
-  if (getFromStorage("trial", false)) {
-    const container = document.querySelector(".price_total");
-    container.innerHTML = "";
-    const buttons = Array.from(
-      document.querySelectorAll(".btn_main_text")
-    ).filter((btn) => btn.textContent === "Jetzt kaufen");
-    buttons.forEach((button) => {
-      button.innerHTML = "Kurseinheit ausprobieren";
-    });
-    return;
-  }
-
   totalContainer.innerHTML = calculateTotalPrice().toFixed(2) + CURRENCY;
 }
 
@@ -1215,7 +1213,7 @@ async function createTrialUser() {
 
     const paidCourses = recommendedCourses.map((course) => ({
       course: course.toUpperCase(),
-      status: "not-active",
+      status: "active",
       validTill: null,
       isTrial: true,
       trialValidTill: trialValidTillStr,
@@ -1260,8 +1258,15 @@ async function createTrialUser() {
     setToStorage("createUserResponse", data);
     setToStorage("userId", data.userId);
 
-    if (!response.ok)
+    if (!response.ok || !data.success) {
+      if (data.message) {
+        const errorDiv = document.querySelector("#error_message_payment");
+        errorDiv.style.display = "block";
+        errorDiv.textContent = data.message;
+
+      }
       throw new Error(data.message || "Failed to create trial user");
+    }
 
     window.location.href = window.location.href.replace(
       "onboarding",
@@ -1269,6 +1274,7 @@ async function createTrialUser() {
     );
 
     return data;
+
   } catch (error) {
     setToStorage("createUserResponse", error);
     console.error("Error creating trial user:", error);
