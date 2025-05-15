@@ -552,6 +552,13 @@ function populateCheckout() {
   const selectedCourses = getFromStorage("selectedCourses", []);
   const pricing = getFromStorage("pricing", {});
 
+  const priceOld =
+    selectedCourses.length === 2 ? Number(pricing.singleCoursePrice) : "";
+  const priceNew =
+    selectedCourses.length === 2
+      ? Number(pricing.twoCoursesPrice) / 2
+      : Number(pricing.singleCoursePrice);
+
   const discountPercentage = calculateDiscountPercentage();
   filteredCourses.forEach((course) => {
     if (selectedCourses.includes(course.slug)) {
@@ -565,25 +572,17 @@ function populateCheckout() {
     }
   });
 
-    
-  const priceOld =
-    selectedCourses.length === 2 ? Number(pricing.singleCoursePrice) : "";
-  const priceNew =
-    selectedCourses.length === 2
-      ? Number(pricing.twoCoursesPrice) / 2
-      : Number(pricing.singleCoursePrice);
-
-
   if (getFromStorage("trial", false)) {
     const container = document.querySelector(".price_total");
-    container.innerHTML = ''
-    const buttons = Array.from(document.querySelectorAll(".btn_main_text")).filter(btn => btn.textContent === "Jetzt kaufen");
-    buttons.forEach(button => {
+    container.innerHTML = "";
+    const buttons = Array.from(
+      document.querySelectorAll(".btn_main_text")
+    ).filter((btn) => btn.textContent === "Jetzt kaufen");
+    buttons.forEach((button) => {
       button.innerHTML = "Kurseinheit ausprobieren";
     });
     return;
   }
-
 
   totalContainer.innerHTML = calculateTotalPrice().toFixed(2) + CURRENCY;
 }
