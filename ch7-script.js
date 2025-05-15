@@ -404,6 +404,7 @@ function recommendCourses() {
 }
 
 function fillSummaryData() {
+  setToStorage("trial", false);
   const takeoverSummary = document.querySelector("#takeoverSummary");
   const selectedHealthProvider = getFromStorage("selectedHealthProvider", "");
   const healthProviders = getFromStorage("healthProviders", {});
