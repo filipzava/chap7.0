@@ -547,9 +547,9 @@ function calculateDiscountPercentage() {
 // Update populateCheckout to use the new utility function
 function populateCheckout() {
   if (getFromStorage("trial", false)) {
-    const container = document.querySelector(".product_overview_wrap");
+    const container = document.querySelectorAll(".product_overview_wrap")[1];
     container.innerHTML = ''
-    const container2 = document.querySelector(".recap_final_contain");
+    const container2 = document.querySelectorAll(".recap_final_contain")[1];
     container2.innerHTML = ''
     const buttons = Array.from(document.querySelectorAll(".btn_main_text")).filter(btn => btn.textContent === "Jetzt kaufen");
     buttons.forEach(button => {
