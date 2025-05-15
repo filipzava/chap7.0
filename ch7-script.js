@@ -864,8 +864,7 @@ async function createUser() {
 
     if (data.message) {
       errorDiv.style.display = "block";
-      errorDiv.textContent = data.message;
-
+      errorDiv.textContent = `${data.message} <br/> ${data.error}`;
     }
 
     if (!response.ok || !data.success) {
