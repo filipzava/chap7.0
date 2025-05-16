@@ -1,6 +1,8 @@
 /* eslint-disable no-case-declarations */
 /* eslint-disable no-undef */
 
+
+
 const dictionary = {
   "error.namePrefix": "Bitte wählen Sie Ihre Anrede aus",
   "error.firstName": "Bitte geben Sie Ihren Vornamen ein",
@@ -41,6 +43,17 @@ let stripe;
 const CURRENCY = "€";
 
 const DEFAULT_CHECKMARK_COLOR = "#E5E7EB";
+
+
+function getSiblingButtonBySelector(selector, childSelector) {
+  const el = document.querySelector(selector);
+  if (!el) return null;
+
+  const parent = el.parentElement;
+  if (!parent) return null;
+
+  return parent.querySelector(childSelector);
+}
 
 function getDocumentFromFireBase(document) {
   return `${API}/getConfigData?document=${document}`;
@@ -668,10 +681,8 @@ async function initializeStripe() {
 // Update the doPayment function to include German localization in Elements
 async function doPayment(amount) {
   try {
-    const registerButton = document
-      .querySelector("#submit_payment")
-      //.querySelector(".btn_main_text");
-    registerButton.textContent = dictionary["payment.processing"];
+    const registerButtonText = getSiblingButtonBySelector("#registerFormSubmitButton", "btn_main_text");
+    registerButtonText.textContent = dictionary["payment.processing"];
     const errorDiv = document.querySelector("#error_message_payment");
 
     if (!stripe) {
@@ -738,7 +749,8 @@ async function doPayment(amount) {
     // Create form for payment submission
     const form = document.querySelector(".payment_gateway_contain");
     // Create submit button
-    const submitButton = document.querySelector("#submit_payment");
+    const submitButton = getSiblingButtonBySelector("#submit_payment", "button");
+    const submitButtonText = getSiblingButtonBySelector("#submit_payment", "btn_main_text");
 
     // Mount the Payment Element
     paymentElement.mount("#payment_element");
@@ -780,7 +792,7 @@ async function doPayment(amount) {
         errorDiv.style.display = "block";
         errorDiv.textContent = error?.message ?? error.toString();
       } finally {
-        registerButton.textContent = dictionary["payment.payNow"];
+        registerButtonText.textContent = dictionary["payment.payNow"];
         submitButton.disabled = false;
       }
     });
