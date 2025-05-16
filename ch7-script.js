@@ -107,8 +107,8 @@ function onboardingHook({ current, index }) {
     populateSummary();
   } else if (index === 4) {
     populateContraindications();
-  } else if (index === 5) {
     populateNamePrefix();
+  } else if (index === 5) {
     populateCheckout();
   }
 }
