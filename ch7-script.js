@@ -1296,7 +1296,7 @@ async function createTrialUser() {
     if (!response.ok || !data.success) {
       if (data.message) {
         errorDiv.style.display = "block";
-        errorDiv.textContent = data.message;
+        errorDiv.textContent = `${data.message}  ${data.error}`;
 
       }
       throw new Error(data.message || "Failed to create trial user");
