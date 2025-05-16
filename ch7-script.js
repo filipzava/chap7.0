@@ -20,8 +20,7 @@ const dictionary = {
   "error.selectOptions": "Bitte wählen Sie mehr als 1 Option aus",
   "error.agreeToTerms": "Bitte stimmen Sie beiden Bedingungen zu",
   "select.healthProvider": "Bitte Krankenkasse wählen",
-  "select.namePrefix.mr": "Herr",
-  "select.namePrefix.mrs": "Frau",
+  
   "payment.processing": "Wird bearbeitet ...",
   "payment.payNow": "Jetzt bezahlen",
   "payment.discount": "Rabatt",
@@ -57,6 +56,10 @@ function getSiblingButtonBySelector(selector, childSelector) {
 
 function getDocumentFromFireBase(document) {
   return `${API}/getConfigData?document=${document}`;
+}
+
+function getNamePrefixes() {
+  return `${API}/getConfigData?document=namePrefixes`;
 }
 
 function getCreateUserBaseUrl() {
@@ -507,6 +510,7 @@ function populateSummary() {
 
   // Add change event listener to the container
   container.addEventListener("change", (event) => {
+    console.log({ event });
     // Check if the changed element is a checkbox
     if (event.target.classList.contains("card_result_checkbox")) {
       onCourseSelected();
@@ -757,6 +761,7 @@ async function doPayment(amount) {
 
     // Handle form submission
     submitButton.addEventListener("click", async (event) => {
+      submitButtonText.textContent = dictionary["payment.processing"];
       event.preventDefault();
       submitButton.disabled = true;
 
@@ -793,6 +798,7 @@ async function doPayment(amount) {
         errorDiv.textContent = error?.message ?? error.toString();
       } finally {
         registerButtonText.textContent = dictionary["payment.payNow"];
+        submitButtonText.textContent = dictionary["payment.payNow"];
         submitButton.disabled = false;
       }
     });
@@ -821,7 +827,7 @@ async function createUser() {
     );
 
     // Format the courses data
-    const paidCourses = recommendedCourses.map((course) => {
+    const paidCourses = selectedCourses.map((course) => {
       const validTill = new Date();
       validTill.setFullYear(validTill.getFullYear() + 1);
 
@@ -900,12 +906,11 @@ async function createUser() {
   }
 }
 
-function populateNamePrefix() {
+async function populateNamePrefix() {
   const namePrefixSelect = document.querySelector('select[name="namePrefix"]');
-  const prefixes = [
-    { value: "Mr.", text: dictionary["select.namePrefix.mr"] },
-    { value: "Mrs.", text: dictionary["select.namePrefix.mrs"] },
-  ];
+  const response = await fetch(getNamePrefixes());
+  const data = await response.json();
+  const prefixes = data.data;
 
   while (namePrefixSelect.options.length > 1) {
     namePrefixSelect.remove(1);
