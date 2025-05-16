@@ -669,7 +669,7 @@ async function initializeStripe() {
 async function doPayment(amount) {
   try {
     const registerButton = document
-      .querySelector("#registerFormSubmitButton")
+      .querySelector("#submit_payment")
       //.querySelector(".btn_main_text");
     registerButton.textContent = dictionary["payment.processing"];
     const errorDiv = document.querySelector("#error_message_payment");
