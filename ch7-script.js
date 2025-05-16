@@ -814,7 +814,7 @@ async function createUser() {
     const errorDiv = document.querySelector("#error_message_step5");
     errorDiv.style.display = "none";
     const userData = getFromStorage("userData", {});
-    const recommendedCourses = getFromStorage("recommendedCourses", []);
+    const selectedCourses = getFromStorage("selectedCourses", []);
     const selectedHealthProvider = getFromStorage("selectedHealthProvider", "");
     const healthProviders = getFromStorage("healthProviders", {});
     const onboardingSurveyAnswers_1 = getFromStorage(
@@ -1228,7 +1228,7 @@ async function createTrialUser() {
     const errorDiv = document.querySelector("#error_message_step5");
     errorDiv.style.display = "none";
     const userData = getFromStorage("userData", {});
-    const recommendedCourses = getFromStorage("recommendedCourses", []);
+    const selectedCourses = getFromStorage("selectedCourses", []);
     const selectedHealthProvider = getFromStorage("selectedHealthProvider", "");
     const healthProviders = getFromStorage("healthProviders", {});
     const onboardingSurveyAnswers_1 = getFromStorage(
@@ -1270,7 +1270,7 @@ async function createTrialUser() {
         takeover: healthProviderData?.takeover || "",
       },
       paidCourses,
-      selectedCourses: recommendedCourses.map((course) => course.toUpperCase()),
+      selectedCourses: selectedCourses.map((course) => course.toUpperCase()),
       onboarding: {
         answers: {
           step1: onboardingSurveyAnswers_1.map((item) => item.type),
