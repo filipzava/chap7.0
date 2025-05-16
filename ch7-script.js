@@ -49,7 +49,7 @@ function getSiblingButtonBySelector(selector, childSelector) {
   const el = document.querySelector(selector);
   if (!el) return null;
 
-  const parent = el.parentElement;
+  const parent = el.parentElement.parentElement;
   if (!parent) return null;
 
   return parent.querySelector(childSelector);
@@ -681,7 +681,7 @@ async function initializeStripe() {
 // Update the doPayment function to include German localization in Elements
 async function doPayment(amount) {
   try {
-    const registerButtonText = getSiblingButtonBySelector("#registerFormSubmitButton", "btn_main_text");
+    const registerButtonText = getSiblingButtonBySelector("#registerFormSubmitButton", ".btn_main_text");
     registerButtonText.textContent = dictionary["payment.processing"];
     const errorDiv = document.querySelector("#error_message_payment");
 
