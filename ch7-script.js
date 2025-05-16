@@ -754,7 +754,7 @@ async function doPayment(amount) {
     const form = document.querySelector(".payment_gateway_contain");
     // Create submit button
     const submitButton = getSiblingButtonBySelector("#submit_payment", "button");
-    const submitButtonText = getSiblingButtonBySelector("#submit_payment", "btn_main_text");
+    const submitButtonText = getSiblingButtonBySelector("#submit_payment", ".btn_main_text");
 
     // Mount the Payment Element
     paymentElement.mount("#payment_element");
