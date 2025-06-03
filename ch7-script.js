@@ -1190,6 +1190,12 @@ document.addEventListener("DOMContentLoaded", function () {
       btn.removeEventListener("click", handlePrevClick);
       btn.addEventListener("click", handlePrevClick);
     });
+
+    // Add event listener for popup close button
+    const popupCloseBtn = document.querySelector("#popupClose");
+    if (popupCloseBtn) {
+      popupCloseBtn.addEventListener("click", handlePrevClick);
+    }
   }
   fetchHealthProviders();
   fetchOnboardingSurvey();
