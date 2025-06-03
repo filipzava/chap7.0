@@ -432,6 +432,12 @@ function fillSummaryData() {
   const coursesCountElement = document.querySelector("#coursesCount");
   coursesCountElement.innerHTML = getFromStorage("selectedCourses", []).length;
 
+  const subscriptionLengthElement = document.querySelector("#subscriptionLength");
+  if (subscriptionLengthElement) {
+    // if one course selected its 12months and if more than one its 18months
+    subscriptionLengthElement.innerHTML = getFromStorage("selectedCourses", []).length === 1 ? "12" : "18";
+  }
+
   const trialButton = document.querySelector("#button_trial");
   trialButton.addEventListener("click", () => {
     setToStorage("trial", true);
