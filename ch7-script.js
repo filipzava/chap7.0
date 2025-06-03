@@ -566,7 +566,7 @@ function populateCheckout() {
   const pricing = getFromStorage("pricing", {});
 
   // Use single price per course - no volume discount
-  const pricePerCourse = Number(pricing.singleCoursePrice) || 0;
+  const pricePerCourse = Number(pricing.programPrice) || 0;
 
   if (getFromStorage("trial", false)) {
     const container = document.querySelector(".price_total");
