@@ -429,8 +429,17 @@ function fillSummaryData() {
   const price = document.querySelector("#price");
   price.innerHTML = calculateTotalPrice() + CURRENCY;
 
-  const coursesCountElement = document.querySelector("#coursesCount");
-  coursesCountElement.innerHTML = getFromStorage("selectedCourses", []).length;
+  const coursesCountElement = document.querySelector(".courses-info-duration");
+  const cc = getFromStorage("selectedCourses", []).length;
+  if (cc === 1) {
+    coursesCountElement.innerHTML = "Für 1 Kurs – 12 Monate Zugang";
+  } else if (cc === 2) {
+    coursesCountElement.innerHTML = "Für 2 Kurse – 18 Monate Zugang";
+  } else {
+    coursesCountElement.innerHTML = "Bitte wählen Sie mindestens 1 Kurs";
+  }
+  
+    
 
   const subscriptionLengthElement = document.querySelector("#subscriptionLength");
   if (subscriptionLengthElement) {
