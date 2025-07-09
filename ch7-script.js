@@ -117,7 +117,7 @@ function onboardingHook({ current, index }) {
 
 async function fetchHealthProviders() {
   try {
-    const response = await fetch(getDocumentFromFireBase("healthProviders"));
+    const response = await fetch(getDocumentFromFireBase("healthInsuranceProviders"));
     const data = await response.json();
 
     if (data.success && Object.keys(data.data).length > 0) {
@@ -879,7 +879,7 @@ async function createUser() {
     const selectedCourses = getFromStorage("selectedCourses", []);
     const recommendedCourses = getFromStorage("recommendedCourses", []);
     const selectedHealthProvider = getFromStorage("selectedHealthProvider", "");
-    const healthProviders = getFromStorage("healthInsuranceProviders", {});
+    const healthProviders = getFromStorage("healthProviders", {});
     const onboardingSurveyAnswers_1 = getFromStorage(
       "onboardingSurveyAnswers_1",
       []
