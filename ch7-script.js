@@ -32,6 +32,7 @@ const dictionary = {
   "success.registration": "Registrierung erfolgreich",
   "success.payment": "Zahlung erfolgreich",
   "success.invoice": "Rechnung wurde erstellt und per E-Mail versandt",
+  "button.closePayment": "Zahlungsfenster schließen",
 };
 
 const PUBLISHABLE_KEY =
@@ -655,6 +656,30 @@ async function doPayment(amount) {
     const submitButtonText = getSiblingButtonBySelector("#submit_payment", ".btn_main_text");
 
     paymentElement.mount("#payment_element");
+
+    const closeButton = document.createElement("div");
+    closeButton.innerHTML = `
+      <div style="text-align: center; margin-top: 20px;">
+        <a href="#" id="close_payment_window" style="text-decoration: underline; color: #666; font-size: 14px; cursor: pointer;">
+          ${dictionary["button.closePayment"]}
+        </a>
+      </div>
+    `;
+    
+    const paymentGatewayContainer = document.querySelector(".payment_gateway_contain");
+    if (paymentGatewayContainer) {
+      paymentGatewayContainer.appendChild(closeButton);
+    }
+
+    const closePaymentLink = document.querySelector("#close_payment_window");
+    if (closePaymentLink) {
+      closePaymentLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        popupWrap.classList.remove("active");
+        popupWrap.style.display = "none";
+        if (registerButtonText) registerButtonText.textContent = dictionary["payment.payNow"];
+      });
+    }
 
     submitButton.addEventListener("click", async (event) => {
       if (submitButtonText) submitButtonText.textContent = dictionary["payment.processing"];
