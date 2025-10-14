@@ -729,7 +729,11 @@ async function doPayment(amount) {
       loader: "auto",
     });
 
+    const mountEl = document.getElementById("payment_element");
+    if (mountEl) mountEl.innerHTML = "";
+
     const paymentElement = elements.create("payment");
+
     const popupWrap = document.querySelector("#payment_popup_wrapper");
     popupWrap.classList.add("active");
     popupWrap.style.display = "flex";
@@ -745,112 +749,113 @@ async function doPayment(amount) {
 
     paymentElement.mount("#payment_element");
 
-    const closeButton = document.createElement("div");
-    closeButton.innerHTML = `
-      <div style="text-align: center; margin-top: 20px;">
-        <a href="#" id="close_payment_window" style="text-decoration: underline; color: #666; font-size: 14px; cursor: pointer;">
-          ${dictionary["button.closePayment"]}
-        </a>
-      </div>
-    `;
-
     const paymentGatewayContainer = document.querySelector(
       ".payment_gateway_contain"
     );
-    if (paymentGatewayContainer) {
-      paymentGatewayContainer.appendChild(closeButton);
+    let closePaymentLink = document.getElementById("close_payment_window");
+    if (!closePaymentLink && paymentGatewayContainer) {
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = `
+        <div style="text-align: center; margin-top: 20px;">
+          <a href="#" id="close_payment_window" style="text-decoration: underline; color: #666; font-size: 14px; cursor: pointer;">
+            ${dictionary["button.closePayment"]}
+          </a>
+        </div>`;
+      paymentGatewayContainer.appendChild(wrapper);
+      closePaymentLink = wrapper.querySelector("#close_payment_window");
     }
-
-    const closePaymentLink = document.querySelector("#close_payment_window");
     if (closePaymentLink) {
-      closePaymentLink.addEventListener("click", (e) => {
+      closePaymentLink.onclick = (e) => {
         e.preventDefault();
         popupWrap.classList.remove("active");
         popupWrap.style.display = "none";
         if (registerButtonText)
           registerButtonText.textContent = dictionary["payment.payNow"];
-      });
+      };
     }
 
-    submitButton.addEventListener("click", async (event) => {
-      if (submitButtonText)
-        submitButtonText.textContent = dictionary["payment.processing"];
-      event.preventDefault();
-      submitButton.disabled = true;
+    submitButton.addEventListener(
+      "click",
+      async (event) => {
+        if (submitButtonText)
+          submitButtonText.textContent = dictionary["payment.processing"];
+        event.preventDefault();
+        submitButton.disabled = true;
 
-      try {
-        const { error, paymentIntent } = await stripe.confirmPayment({
-          elements,
-          redirect: "if_required",
-          confirmParams: {
-            return_url: window.location.href.replace(
-              "onboarding",
-              "vielen-dank"
-            ),
-            payment_method_data: {
-              billing_details: {
-                name: `${userData.firstName} ${userData.lastName}`,
-                email: userData.email,
-                address: { country: "DE" },
+        try {
+          const { error, paymentIntent } = await stripe.confirmPayment({
+            elements,
+            redirect: "if_required",
+            confirmParams: {
+              return_url: window.location.href.replace(
+                "onboarding",
+                "vielen-dank"
+              ),
+              payment_method_data: {
+                billing_details: {
+                  name: `${userData.firstName} ${userData.lastName}`,
+                  email: userData.email,
+                  address: { country: "DE" },
+                },
               },
             },
-          },
-        });
-
-        if (error) {
-          console.error("Payment failed:", error);
-          errorDiv.style.display = "block";
-          errorDiv.textContent = error.message;
-        } else if (paymentIntent && paymentIntent.status === "succeeded") {
-          setToStorage("paymentSuccess", {
-            paymentIntentId: paymentIntent.id,
-            amount: amount,
-            timestamp: new Date().toISOString(),
           });
 
-          const userId = getFromStorage("createUserResponse", {}).userId;
-          const selectedCourses = getFromStorage("selectedCourses", []);
-          const programSlugs = selectedCourses.map((course) =>
-            course.toUpperCase()
-          );
+          if (error) {
+            console.error("Payment failed:", error);
+            errorDiv.style.display = "block";
+            errorDiv.textContent = error.message;
+          } else if (paymentIntent && paymentIntent.status === "succeeded") {
+            setToStorage("paymentSuccess", {
+              paymentIntentId: paymentIntent.id,
+              amount: amount,
+              timestamp: new Date().toISOString(),
+            });
 
-          const purchaseBtn =
-            document
-              .querySelector("#registerFormSubmitButton")
-              ?.closest("button") ||
-            document.querySelector("[data-btn-submit]") ||
-            document.querySelector("button:has(.btn_main_text)");
+            const userId = getFromStorage("createUserResponse", {}).userId;
+            const selectedCourses = getFromStorage("selectedCourses", []);
+            const programSlugs = selectedCourses.map((course) =>
+              course.toUpperCase()
+            );
 
-          if (purchaseBtn) {
-            purchaseBtn.disabled = true;
-            purchaseBtn.classList.add("disabled");
-            purchaseBtn.setAttribute("aria-disabled", "true");
+            const purchaseBtn =
+              document
+                .querySelector("#registerFormSubmitButton")
+                ?.closest("button") ||
+              document.querySelector("[data-btn-submit]") ||
+              document.querySelector("button:has(.btn_main_text)");
+            if (purchaseBtn) {
+              purchaseBtn.disabled = true;
+              purchaseBtn.classList.add("disabled");
+              purchaseBtn.setAttribute("aria-disabled", "true");
+            }
+
+            await handlePurchaseAndInvoice(paymentIntent.id, amount, userId);
+            await sendWelcomeEmail(userId, programSlugs);
+
+            localStorage.removeItem("userId");
+            window.location.href = window.location.href.replace(
+              "onboarding",
+              "vielen-dank"
+            );
+          } else {
+            errorDiv.style.display = "block";
+            errorDiv.textContent = dictionary["error.paymentIncomplete"];
           }
-          await handlePurchaseAndInvoice(paymentIntent.id, amount, userId);
-          await sendWelcomeEmail(userId, programSlugs);
-
-          localStorage.removeItem("userId");
-
-          window.location.href = window.location.href.replace(
-            "onboarding",
-            "vielen-dank"
-          );
-        } else {
+        } catch (error) {
+          console.error("Payment error:", error);
           errorDiv.style.display = "block";
-          errorDiv.textContent = dictionary["error.paymentIncomplete"];
+          errorDiv.textContent = error?.message ?? error.toString();
+        } finally {
+          if (registerButtonText)
+            registerButtonText.textContent = dictionary["payment.payNow"];
+          if (submitButtonText)
+            submitButtonText.textContent = dictionary["payment.payNow"];
+          submitButton.disabled = false;
         }
-      } catch (error) {
-        console.error("Payment error:", error);
-        errorDiv.style.display = "block";
-        errorDiv.textContent = error?.message ?? error.toString();
-      } finally {
-        if (registerButtonText)
-          registerButtonText.textContent = dictionary["payment.payNow"];
-        if (submitButtonText)
-          submitButtonText.textContent = dictionary["payment.payNow"];
-        submitButton.disabled = false;
-      }
-    });
+      },
+      { once: true }
+    );
   } catch (error) {
     console.error(dictionary["error.payment"], error);
     throw error;
