@@ -75,6 +75,13 @@ function getWebflowStory(slug) {
   return `${API}/getWebflowStory?slug=${slug}&draft=true`;
 }
 
+function getVerifyEmailUrl() {
+  return `${API}/verify-email`;
+}
+function getIsEmailVerifiedUrl(userId) {
+  return `${API}/is-email-verified?userId=${encodeURIComponent(userId)}`;
+}
+
 function getFromStorage(key, defaultValue = null) {
   try {
     const item = localStorage.getItem(key);
@@ -632,7 +639,220 @@ function renderCheckoutCourseItem(
     </div>`;
   return template.content.firstElementChild;
 }
+/* -------------------- email verification flow -------------------- */
+async function apiIsEmailVerified(userId) {
+  try {
+    const res = await fetch(getIsEmailVerifiedUrl(userId), { method: "GET" });
+    const data = await res.json();
+    if (!res.ok || !data?.success)
+      throw new Error(data?.message || "Check failed");
+    return !!data.emailVerified;
+  } catch (e) {
+    console.error("is-email-verified error:", e);
+    return false;
+  }
+}
 
+async function apiSendVerifyEmail(userId) {
+  try {
+    const res = await fetch(getVerifyEmailUrl(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data?.success)
+      throw new Error(data?.message || "Send failed");
+    return true;
+  } catch (e) {
+    console.error("verify-email error:", e);
+    return false;
+  }
+}
+
+function ensureEmailVerifyModalExists() {
+  let modal = document.getElementById("email_verify_modal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "email_verify_modal";
+  modal.innerHTML = `
+    <div class="evm-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:9998;"></div>
+    <div class="evm-dialog" style="position:fixed;inset:0;display:none;z-index:9999;align-items:center;justify-content:center;">
+      <div class="evm-card" style="max-width:520px;width:92%;background:#fff;border-radius:12px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.15);">
+        <h3 style="margin:0 0 12px 0;">E-Mail bestätigen</h3>
+        <p id="evm_text" style="margin:0 0 16px 0;line-height:1.5;">
+          Bitte klicken Sie auf <strong>„Bestätigungslink senden“</strong>, öffnen Sie den Link in Ihrer E-Mail
+          und kehren Sie anschließend in diese Browser-Registerkarte zurück. Danach klicken Sie auf
+          <strong>„Bestätigung prüfen“</strong>.
+        </p>
+        <div id="evm_error" style="display:none;margin-bottom:12px;color:#b91c1c;font-size:14px;"></div>
+        <div id="evm_success" style="display:none;margin-bottom:12px;color:#166534;font-size:14px;"></div>
+
+        <div id="evm_actions_initial" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="evm_send" class="g-btn g_clickable_btn" style="padding:10px 14px;border-radius:8px;border:1px solid #d1d5db;background:#111827;color:#fff;">
+            Bestätigungslink senden
+          </button>
+          <button id="evm_cancel" style="padding:10px 14px;border-radius:8px;border:1px solid #d1d5db;background:#fff;">
+            Abbrechen
+          </button>
+        </div>
+
+        <div id="evm_actions_after_send" style="display:none;gap:8px;flex-wrap:wrap;">
+          <button id="evm_resend" class="g-btn g_clickable_btn" style="padding:10px 14px;border-radius:8px;border:1px solid #d1d5db;background:#111827;color:#fff;">
+            Nochmals senden
+          </button>
+          <button id="evm_check" style="padding:10px 14px;border-radius:8px;border:1px solid #d1d5db;background:#fff;">
+            Bestätigung prüfen
+          </button>
+          <button id="evm_close" style="padding:10px 14px;border-radius:8px;border:1px solid #d1d5db;background:#fff;margin-left:auto;">
+            Schließen
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+function showEmailVerifyModal() {
+  const modal = ensureEmailVerifyModalExists();
+  modal.querySelector(".evm-backdrop").style.display = "block";
+  modal.querySelector(".evm-dialog").style.display = "flex";
+}
+function hideEmailVerifyModal() {
+  const modal = document.getElementById("email_verify_modal");
+  if (!modal) return;
+  modal.querySelector(".evm-backdrop").style.display = "none";
+  modal.querySelector(".evm-dialog").style.display = "none";
+  const err = modal.querySelector("#evm_error");
+  const ok = modal.querySelector("#evm_success");
+  if (err) {
+    err.style.display = "none";
+    err.textContent = "";
+  }
+  if (ok) {
+    ok.style.display = "none";
+    ok.textContent = "";
+  }
+  modal.querySelector("#evm_actions_initial").style.display = "flex";
+  modal.querySelector("#evm_actions_after_send").style.display = "none";
+}
+
+function wireEmailVerifyModal({ userId, onVerified }) {
+  const modal = ensureEmailVerifyModalExists();
+
+  const btnSend = modal.querySelector("#evm_send");
+  const btnCancel = modal.querySelector("#evm_cancel");
+  const btnResend = modal.querySelector("#evm_resend");
+  const btnCheck = modal.querySelector("#evm_check");
+  const btnClose = modal.querySelector("#evm_close");
+  const errBox = modal.querySelector("#evm_error");
+  const okBox = modal.querySelector("#evm_success");
+  const aInit = modal.querySelector("#evm_actions_initial");
+  const aAfter = modal.querySelector("#evm_actions_after_send");
+
+  [btnSend, btnCancel, btnResend, btnCheck, btnClose].forEach((el) => {
+    if (!el) return;
+    const clone = el.cloneNode(true);
+    el.parentNode.replaceChild(clone, el);
+  });
+
+  const _btnSend = modal.querySelector("#evm_send");
+  const _btnCancel = modal.querySelector("#evm_cancel");
+  const _btnResend = modal.querySelector("#evm_resend");
+  const _btnCheck = modal.querySelector("#evm_check");
+  const _btnClose = modal.querySelector("#evm_close");
+
+  function showErr(msg) {
+    errBox.style.display = "block";
+    errBox.textContent = msg;
+    okBox.style.display = "none";
+    okBox.textContent = "";
+  }
+  function showOk(msg) {
+    okBox.style.display = "block";
+    okBox.textContent = msg;
+    errBox.style.display = "none";
+    errBox.textContent = "";
+  }
+
+  _btnSend.addEventListener("click", async () => {
+    _btnSend.disabled = true;
+    showErr("");
+    showOk("");
+    const ok = await apiSendVerifyEmail(userId);
+    _btnSend.disabled = false;
+    if (!ok) {
+      showErr("Fehler beim Senden des Bestätigungslinks.");
+      return;
+    }
+    aInit.style.display = "none";
+    aAfter.style.display = "flex";
+    showOk(
+      "Link gesendet. Öffnen Sie die E-Mail und klicken Sie auf den Link."
+    );
+  });
+
+  _btnResend.addEventListener("click", async () => {
+    _btnResend.disabled = true;
+    showErr("");
+    showOk("");
+    const ok = await apiSendVerifyEmail(userId);
+    _btnResend.disabled = false;
+    if (!ok) {
+      showErr("Fehler beim Senden des Bestätigungslinks.");
+      return;
+    }
+    showOk("Link erneut gesendet.");
+  });
+
+  _btnCheck.addEventListener("click", async () => {
+    _btnCheck.disabled = true;
+    showErr("");
+    showOk("Prüfe Bestätigung...");
+    const verified = await apiIsEmailVerified(userId);
+    _btnCheck.disabled = false;
+    if (verified) {
+      showOk("E-Mail wurde bestätigt. Es geht weiter zur Zahlung …");
+      hideEmailVerifyModal();
+      if (typeof onVerified === "function") onVerified();
+    } else {
+      showErr(
+        "E-Mail ist noch nicht bestätigt. Bitte klicken Sie auf den Link in Ihrer E-Mail und versuchen Sie es erneut."
+      );
+    }
+  });
+
+  _btnCancel.addEventListener("click", () => hideEmailVerifyModal());
+  _btnClose.addEventListener("click", () => hideEmailVerifyModal());
+}
+
+async function ensureEmailVerifiedThenPay(amount) {
+  const userId = getFromStorage("createUserResponse", {}).userId;
+  if (!userId) {
+    console.error("No userId found in storage for verification check.");
+    const errDiv = document.querySelector("#error_message_step5");
+    if (errDiv) {
+      errDiv.style.display = "block";
+      errDiv.textContent = "Unbekannter Fehler: Benutzer nicht gefunden.";
+    }
+    return;
+  }
+
+  const verified = await apiIsEmailVerified(userId);
+  if (verified) {
+    await doPayment(amount);
+    return;
+  }
+
+  wireEmailVerifyModal({
+    userId,
+    onVerified: () => doPayment(amount),
+  });
+  showEmailVerifyModal();
+}
 /* -------------------- stripe -------------------- */
 async function initializeStripe() {
   if (typeof Stripe === "undefined") {
@@ -1177,7 +1397,7 @@ document.addEventListener("DOMContentLoaded", function () {
               return;
             }
             await createUser();
-            await doPayment(calculateTotalPrice());
+            await ensureEmailVerifiedThenPay(calculateTotalPrice());
           }
           break;
         }
