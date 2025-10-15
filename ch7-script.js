@@ -115,7 +115,20 @@ function updateInfoBox(selectedProvider) {
   if (nameEl) nameEl.textContent = selectedProvider || "—";
   if (amountEl) amountEl.textContent = extractAmount(hp);
 }
+function getUserIdSafe() {
+  const fromCreate = getFromStorage("createUserResponse", null);
+  if (
+    fromCreate &&
+    typeof fromCreate.userId === "string" &&
+    fromCreate.userId.length > 0
+  ) {
+    return fromCreate.userId;
+  }
+  const fromKey = getFromStorage("userId", null);
+  if (typeof fromKey === "string" && fromKey.length > 0) return fromKey;
 
+  return null;
+}
 /* -------------------- flow hooks -------------------- */
 function onboardingHook({ current, index }) {
   if (index === 0) {
@@ -679,33 +692,34 @@ function ensureEmailVerifyModalExists() {
   modal.innerHTML = `
     <div class="evm-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:9998;"></div>
     <div class="evm-dialog" style="position:fixed;inset:0;display:none;z-index:9999;align-items:center;justify-content:center;">
-      <div class="evm-card" style="max-width:520px;width:92%;background:#fff;border-radius:12px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.15);">
-        <h3 style="margin:0 0 12px 0;">E-Mail bestätigen</h3>
-        <p id="evm_text" style="margin:0 0 16px 0;line-height:1.5;">
+      <div class="evm-card" style="max-width:600px;width:92%;background:#fff;border-radius:16px;padding:24px 24px 18px;box-shadow:0 16px 40px rgba(0,0,0,.2);">
+        <h2 style="margin:0 0 14px 0;font-size:30px;line-height:1.2;color:#13223b;">E-Mail bestätigen</h2>
+        <p id="evm_text" style="margin:0 0 12px 0;line-height:1.55;color:#1f2937;font-size:16px;">
           Bitte klicken Sie auf <strong>„Bestätigungslink senden“</strong>, öffnen Sie den Link in Ihrer E-Mail
           und kehren Sie anschließend in diese Browser-Registerkarte zurück. Danach klicken Sie auf
           <strong>„Bestätigung prüfen“</strong>.
         </p>
-        <div id="evm_error" style="display:none;margin-bottom:12px;color:#b91c1c;font-size:14px;"></div>
-        <div id="evm_success" style="display:none;margin-bottom:12px;color:#166534;font-size:14px;"></div>
 
-        <div id="evm_actions_initial" style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button id="evm_send" class="g-btn g_clickable_btn" style="padding:10px 14px;border-radius:8px;border:1px solid #d1d5db;background:#111827;color:#fff;">
+        <div id="evm_error" style="display:none;margin:10px 0 6px;color:#b91c1c;font-size:14px;"></div>
+        <div id="evm_success" style="display:none;margin:10px 0 6px;color:#166534;font-size:14px;"></div>
+
+        <div id="evm_actions_initial" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+          <button id="evm_send" style="padding:10px 14px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer;">
             Bestätigungslink senden
           </button>
-          <button id="evm_cancel" style="padding:10px 14px;border-radius:8px;border:1px solid #d1d5db;background:#fff;">
+          <button id="evm_cancel" style="padding:10px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;color:#111827;cursor:pointer;">
             Abbrechen
           </button>
         </div>
 
-        <div id="evm_actions_after_send" style="display:none;gap:8px;flex-wrap:wrap;">
-          <button id="evm_resend" class="g-btn g_clickable_btn" style="padding:10px 14px;border-radius:8px;border:1px solid #d1d5db;background:#111827;color:#fff;">
+        <div id="evm_actions_after_send" style="display:none;gap:10px;flex-wrap:wrap;margin-top:12px;">
+          <button id="evm_resend" style="padding:10px 14px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer;">
             Nochmals senden
           </button>
-          <button id="evm_check" style="padding:10px 14px;border-radius:8px;border:1px solid #d1d5db;background:#fff;">
+          <button id="evm_check" style="padding:10px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;color:#111827;cursor:pointer;">
             Bestätigung prüfen
           </button>
-          <button id="evm_close" style="padding:10px 14px;border-radius:8px;border:1px solid #d1d5db;background:#fff;margin-left:auto;">
+          <button id="evm_close" style="margin-left:auto;padding:10px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;color:#111827;cursor:pointer;">
             Schließen
           </button>
         </div>
@@ -717,122 +731,87 @@ function ensureEmailVerifyModalExists() {
 }
 
 function showEmailVerifyModal() {
-  const modal = ensureEmailVerifyModalExists();
-  modal.querySelector(".evm-backdrop").style.display = "block";
-  modal.querySelector(".evm-dialog").style.display = "flex";
+  const m = ensureEmailVerifyModalExists();
+  m.querySelector(".evm-backdrop").style.display = "block";
+  m.querySelector(".evm-dialog").style.display = "flex";
 }
 function hideEmailVerifyModal() {
-  const modal = document.getElementById("email_verify_modal");
-  if (!modal) return;
-  modal.querySelector(".evm-backdrop").style.display = "none";
-  modal.querySelector(".evm-dialog").style.display = "none";
-  const err = modal.querySelector("#evm_error");
-  const ok = modal.querySelector("#evm_success");
-  if (err) {
-    err.style.display = "none";
-    err.textContent = "";
-  }
-  if (ok) {
-    ok.style.display = "none";
-    ok.textContent = "";
-  }
-  modal.querySelector("#evm_actions_initial").style.display = "flex";
-  modal.querySelector("#evm_actions_after_send").style.display = "none";
+  const m = document.getElementById("email_verify_modal");
+  if (!m) return;
+  m.querySelector(".evm-backdrop").style.display = "none";
+  m.querySelector(".evm-dialog").style.display = "none";
+  m.querySelector("#evm_error").style.display = "none";
+  m.querySelector("#evm_error").textContent = "";
+  m.querySelector("#evm_success").style.display = "none";
+  m.querySelector("#evm_success").textContent = "";
+  m.querySelector("#evm_actions_initial").style.display = "flex";
+  m.querySelector("#evm_actions_after_send").style.display = "none";
 }
 
 function wireEmailVerifyModal({ userId, onVerified }) {
-  const modal = ensureEmailVerifyModalExists();
+  const m = ensureEmailVerifyModalExists();
 
-  const btnSend = modal.querySelector("#evm_send");
-  const btnCancel = modal.querySelector("#evm_cancel");
-  const btnResend = modal.querySelector("#evm_resend");
-  const btnCheck = modal.querySelector("#evm_check");
-  const btnClose = modal.querySelector("#evm_close");
-  const errBox = modal.querySelector("#evm_error");
-  const okBox = modal.querySelector("#evm_success");
-  const aInit = modal.querySelector("#evm_actions_initial");
-  const aAfter = modal.querySelector("#evm_actions_after_send");
-
-  [btnSend, btnCancel, btnResend, btnCheck, btnClose].forEach((el) => {
-    if (!el) return;
-    const clone = el.cloneNode(true);
-    el.parentNode.replaceChild(clone, el);
+  ["evm_send","evm_cancel","evm_resend","evm_check","evm_close"].forEach(id=>{
+    const el = m.querySelector(`#${id}`);
+    if (el) {
+      const clone = el.cloneNode(true);
+      el.parentNode.replaceChild(clone, el);
+    }
   });
 
-  const _btnSend = modal.querySelector("#evm_send");
-  const _btnCancel = modal.querySelector("#evm_cancel");
-  const _btnResend = modal.querySelector("#evm_resend");
-  const _btnCheck = modal.querySelector("#evm_check");
-  const _btnClose = modal.querySelector("#evm_close");
+  const btnSend   = m.querySelector("#evm_send");
+  const btnCancel = m.querySelector("#evm_cancel");
+  const btnResend = m.querySelector("#evm_resend");
+  const btnCheck  = m.querySelector("#evm_check");
+  const btnClose  = m.querySelector("#evm_close");
+  const errBox    = m.querySelector("#evm_error");
+  const okBox     = m.querySelector("#evm_success");
+  const aInit     = m.querySelector("#evm_actions_initial");
+  const aAfter    = m.querySelector("#evm_actions_after_send");
 
-  function showErr(msg) {
-    errBox.style.display = "block";
-    errBox.textContent = msg;
-    okBox.style.display = "none";
-    okBox.textContent = "";
-  }
-  function showOk(msg) {
-    okBox.style.display = "block";
-    okBox.textContent = msg;
-    errBox.style.display = "none";
-    errBox.textContent = "";
-  }
+  const showErr = (t)=>{ errBox.textContent=t||""; errBox.style.display=t?"block":"none"; if(t) okBox.style.display="none"; };
+  const showOk  = (t)=>{ okBox.textContent=t||""; okBox.style.display=t?"block":"none"; if(t) errBox.style.display="none"; };
 
-  _btnSend.addEventListener("click", async () => {
-    _btnSend.disabled = true;
-    showErr("");
-    showOk("");
+  btnSend.addEventListener("click", async ()=>{
+    btnSend.disabled = true; showErr(""); showOk("");
     const ok = await apiSendVerifyEmail(userId);
-    _btnSend.disabled = false;
-    if (!ok) {
-      showErr("Fehler beim Senden des Bestätigungslinks.");
-      return;
-    }
+    btnSend.disabled = false;
+    if (!ok) return showErr("Fehler beim Senden des Bestätigungslinks.");
     aInit.style.display = "none";
     aAfter.style.display = "flex";
-    showOk(
-      "Link gesendet. Öffnen Sie die E-Mail und klicken Sie auf den Link."
-    );
+    showOk("Link gesendet. Öffnen Sie die E-Mail und klicken Sie auf den Link.");
   });
 
-  _btnResend.addEventListener("click", async () => {
-    _btnResend.disabled = true;
-    showErr("");
-    showOk("");
+  btnResend.addEventListener("click", async ()=>{
+    btnResend.disabled = true; showErr(""); showOk("");
     const ok = await apiSendVerifyEmail(userId);
-    _btnResend.disabled = false;
-    if (!ok) {
-      showErr("Fehler beim Senden des Bestätigungslinks.");
-      return;
-    }
+    btnResend.disabled = false;
+    if (!ok) return showErr("Fehler beim Senden des Bestätigungslinks.");
     showOk("Link erneut gesendet.");
   });
 
-  _btnCheck.addEventListener("click", async () => {
-    _btnCheck.disabled = true;
-    showErr("");
-    showOk("Prüfe Bestätigung...");
+  btnCheck.addEventListener("click", async ()=>{
+    btnCheck.disabled = true; showErr(""); showOk("Prüfe Bestätigung…");
     const verified = await apiIsEmailVerified(userId);
-    _btnCheck.disabled = false;
+    btnCheck.disabled = false;
     if (verified) {
       showOk("E-Mail wurde bestätigt. Es geht weiter zur Zahlung …");
       hideEmailVerifyModal();
       if (typeof onVerified === "function") onVerified();
     } else {
-      showErr(
-        "E-Mail ist noch nicht bestätigt. Bitte klicken Sie auf den Link in Ihrer E-Mail und versuchen Sie es erneut."
-      );
+      showErr("E-Mail ist noch nicht bestätigt. Bitte klicken Sie auf den Link in Ihrer E-Mail und versuchen Sie es erneut.");
     }
   });
 
-  _btnCancel.addEventListener("click", () => hideEmailVerifyModal());
-  _btnClose.addEventListener("click", () => hideEmailVerifyModal());
+  btnCancel.addEventListener("click", ()=> hideEmailVerifyModal());
+  btnClose .addEventListener("click", ()=> hideEmailVerifyModal());
 }
 
+
 async function ensureEmailVerifiedThenPay(amount) {
-  const userId = getFromStorage("createUserResponse", {}).userId;
+  const userId = getUserIdSafe();
   if (!userId) {
-    console.error("No userId found in storage for verification check.");
+    console.error("No userId found for email verification.");
     const errDiv = document.querySelector("#error_message_step5");
     if (errDiv) {
       errDiv.style.display = "block";
