@@ -1447,7 +1447,7 @@ document.addEventListener("DOMContentLoaded", function () {
             dateOfBirth: form.querySelector('input[name="dateOfBirth"]'),
             email: form.querySelector('input[name="email"]'),
             password: form.querySelector('input[name="password"]'),
-            consent1: form.querySelector('input[name="consent1"]'),
+            communicationViaEmail: form.querySelector('input[name="communication-via-email"]'),
             privacyPolicy: form.querySelector('input[name="privacyPolicy"]'),
           };
 
@@ -1467,7 +1467,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const value = field.value.trim();
             formData[key] = value;
 
-            if (!value && !["consent1", "privacyPolicy"].includes(key)) {
+            if (!value && !["communicationViaEmail", "privacyPolicy"].includes(key)) {
               field.classList.add("error");
               valid = false;
               switch (key) {
@@ -1520,7 +1520,7 @@ document.addEventListener("DOMContentLoaded", function () {
               }
             }
 
-            if (key === "consent1" && !field.checked) {
+            if (key === "communicationViaEmail" && !field.checked) {
               field.classList.add("error");
               valid = false;
               errorMessages.push(dictionary["error.termsAndConditions"]);
@@ -1641,9 +1641,22 @@ document.addEventListener("DOMContentLoaded", function () {
     if (popupCloseBtn) popupCloseBtn.addEventListener("click", handlePrevClick);
   }
 
+  function preventUncheckingCommunicationEmail() {
+    const communicationCheckbox = document.querySelector('input[name="communication-via-email"]');
+    if (communicationCheckbox) {
+      communicationCheckbox.addEventListener('change', function(e) {
+        if (!this.checked) {
+          this.checked = true;
+          console.log('Communication via email cannot be unchecked');
+        }
+      });
+    }
+  }
+
   fetchHealthProviders();
   fetchOnboardingSurvey();
   attachEventListeners();
+  preventUncheckingCommunicationEmail();
   showStep(currentStep);
 });
 
