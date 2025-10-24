@@ -1271,7 +1271,6 @@ async function createUser() {
         numberOfCourses: recommendedCourses.length.toString(),
         takeover: healthProviderData.takeover || "",
       },
-      paidCourses: paidCourses,
       selectedCourses: selectedCourses.map((course) => course.toUpperCase()),
       onboarding: {
         answers: {
