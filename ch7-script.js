@@ -979,6 +979,43 @@ async function ensureEmailVerifiedThenPay(amount) {
   });
   showEmailVerifyModal();
 }
+
+async function ensureEmailVerifiedThenCompleteTrial() {
+  const userId = getUserIdSafe();
+  if (!userId) {
+    console.error("No userId found for email verification.");
+    const errDiv = document.querySelector("#error_message_step5");
+    if (errDiv) {
+      errDiv.style.display = "block";
+      errDiv.textContent = "Unbekannter Fehler: Benutzer nicht gefunden.";
+    }
+    return;
+  }
+
+  const verified = await apiIsEmailVerified(userId);
+  if (verified) {
+    await completeOnboarding(userId, true);
+    localStorage.removeItem("userId");
+    window.location.href = window.location.href.replace(
+      "onboarding",
+      "vielen-dank"
+    );
+    return;
+  }
+
+  wireEmailVerifyModal({
+    userId,
+    onVerified: async () => {
+      await completeOnboarding(userId, true);
+      localStorage.removeItem("userId");
+      window.location.href = window.location.href.replace(
+        "onboarding",
+        "vielen-dank"
+      );
+    },
+  });
+  showEmailVerifyModal();
+}
 /* -------------------- stripe -------------------- */
 async function initializeStripe() {
   if (typeof Stripe === "undefined") {
@@ -1031,12 +1068,12 @@ async function sendWelcomeEmail(userId, programSlugs) {
   }
 }
 
-async function completeOnboarding(userId) {
+async function completeOnboarding(userId, isTrial = false) {
   try {
     const response = await fetch(`${API}/complete-onboarding`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
+      body: JSON.stringify({ userId, isTrial }),
     });
     const data = await response.json();
     if (!response.ok)
@@ -1704,18 +1741,6 @@ async function createTrialUser() {
       []
     );
 
-    const trialValidTill = new Date();
-    trialValidTill.setDate(trialValidTill.getDate() + 14);
-    const trialValidTillStr = trialValidTill.toISOString().split("T")[0];
-
-    const paidCourses = selectedCourses.map((course) => ({
-      course: course.toUpperCase(),
-      status: "active",
-      validTill: null,
-      isTrial: true,
-      trialValidTill: trialValidTillStr,
-    }));
-
     const healthProviderData = healthProviders[selectedHealthProvider];
     const hasContraindications = getFilteredContraindications().length > 0;
 
@@ -1734,7 +1759,6 @@ async function createTrialUser() {
         numberOfCourses: recommendedCourses.length.toString(),
         takeover: healthProviderData?.takeover || "",
       },
-      paidCourses,
       selectedCourses: selectedCourses.map((course) => course.toUpperCase()),
       onboarding: {
         answers: {
@@ -1762,10 +1786,7 @@ async function createTrialUser() {
             userId: savedUserId,
             success: true,
           });
-          window.location.href = window.location.href.replace(
-            "onboarding",
-            "vielen-dank"
-          );
+          await ensureEmailVerifiedThenCompleteTrial();
           return { userId: savedUserId, success: true, skippedCreation: true };
         }
         const errorDiv = document.querySelector("#error_message_step5");
@@ -1795,10 +1816,7 @@ async function createTrialUser() {
     setToStorage("createUserResponse", data);
     setToStorage("userId", data.userId);
 
-    window.location.href = window.location.href.replace(
-      "onboarding",
-      "vielen-dank"
-    );
+    await ensureEmailVerifiedThenCompleteTrial();
     return data;
   } catch (error) {
     setToStorage("createUserResponse", error);
