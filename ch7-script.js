@@ -21,6 +21,7 @@ const dictionary = {
   "error.requiredFields": "Bitte füllen Sie alle erforderlichen Felder aus",
   "error.healthProvider": "Bitte wählen Sie eine Krankenkasse aus",
   "error.selectOptions": "Bitte wählen Sie mehr als 1 Option aus",
+  "error.tooManyOptions": "Sie können maximal 2 Programme auswählen",
   "error.agreeToTerms": "Bitte stimmen Sie beiden Bedingungen zu",
   "select.healthProvider": "Bitte Krankenkasse wählen",
   "payment.processing": "Wird bearbeitet ...",
@@ -1413,9 +1414,12 @@ document.addEventListener("DOMContentLoaded", function () {
           const checkboxesStep2 = document.querySelectorAll(
             ".card_select_checkbox:checked"
           );
-          if (checkboxesStep2.length < 1 || checkboxesStep2.length > 2) {
+          if (checkboxesStep2.length < 1) {
             valid = false;
             errorMessages.push(dictionary["error.selectOptions"]);
+          } else if (checkboxesStep2.length > 2) {
+            valid = false;
+            errorMessages.push(dictionary["error.tooManyOptions"]);
           }
           break;
         }
