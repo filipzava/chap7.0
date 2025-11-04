@@ -226,6 +226,40 @@ function hideFullscreenLoader() {
   }
 }
 
+function clearLocalStorageAfterPayment() {
+  const keysToRemove = [
+    "currentStep",
+    "userData",
+    "healthProviders",
+    "selectedHealthProvider",
+    "pricing",
+    "contraindications",
+    "courses",
+    "onboardingSurvey",
+    "onboardingSurveyAnswers_1",
+    "onboardingSurveyAnswers_2",
+    "SurveyAnswersCourseTypes",
+    "recommendedCourses",
+    "selectedCourses",
+    "trial",
+    "invoiceUrl",
+    "paymentIntentPayload",
+    "paymentIntentResponse",
+    "paymentSuccess",
+    "createUserPayload",
+    "createUserResponse",
+    "userId",
+  ];
+
+  keysToRemove.forEach((key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {
+      console.warn(`Failed to remove ${key} from localStorage:`, e);
+    }
+  });
+}
+
 async function triggerFormSubmissionFlow(showLoader = false) {
   const form = document.getElementById("signUpForm");
   if (!form) {
@@ -1468,7 +1502,7 @@ async function ensureEmailVerifiedThenCompleteTrial(showLoader = false) {
     if (verified) {
       await completeOnboarding(userId, true);
       if (showLoader) hideFullscreenLoader();
-      localStorage.removeItem("userId");
+      clearLocalStorageAfterPayment();
       window.location.href = window.location.href.replace(
         "onboarding",
         "vielen-dank"
@@ -1481,7 +1515,7 @@ async function ensureEmailVerifiedThenCompleteTrial(showLoader = false) {
       onVerified: async () => {
         await completeOnboarding(userId, true);
         if (showLoader) hideFullscreenLoader();
-        localStorage.removeItem("userId");
+        clearLocalStorageAfterPayment();
         window.location.href = window.location.href.replace(
           "onboarding",
           "vielen-dank"
@@ -1715,7 +1749,7 @@ async function doPayment(amount, showLoader = false) {
             await completeOnboarding(userId);
 
             if (showLoader) hideFullscreenLoader();
-            localStorage.removeItem("userId");
+            clearLocalStorageAfterPayment();
             window.location.href = window.location.href.replace(
               "onboarding",
               "vielen-dank"
