@@ -132,6 +132,103 @@ function getUserIdSafe() {
 
   return null;
 }
+
+function saveCurrentStep(stepIndex) {
+  setToStorage("currentStep", stepIndex);
+}
+
+function getSavedCurrentStep() {
+  const saved = getFromStorage("currentStep", 0);
+  return typeof saved === "number" && saved >= 0 ? saved : 0;
+}
+
+function saveFormData(formData) {
+  const existingData = getFromStorage("userData", {});
+  const mergedData = { ...existingData, ...formData };
+  setToStorage("userData", mergedData);
+}
+
+function restoreFormData() {
+  const savedData = getFromStorage("userData", {});
+  const form = document.getElementById("signUpForm");
+  if (!form || !savedData) return;
+
+  const fields = {
+    namePrefix: form.querySelector('select[name="namePrefix"]'),
+    firstName: form.querySelector('input[name="firstName"]'),
+    lastName: form.querySelector('input[name="lastName"]'),
+    dateOfBirth: form.querySelector('input[name="dateOfBirth"]'),
+    email: form.querySelector('input[name="email"]'),
+    password: form.querySelector('input[name="password"]'),
+    communicationViaEmail: form.querySelector('input[name="communication-via-email"]'),
+    newsletterSignUp: form.querySelector('input[name="newsletter-sign-up"]'),
+    privacyPolicy: form.querySelector('input[name="privacyPolicy"]'),
+  };
+
+  if (fields.namePrefix && savedData.namePrefix) {
+    fields.namePrefix.value = savedData.namePrefix;
+  }
+  if (fields.firstName && savedData.firstName) {
+    fields.firstName.value = savedData.firstName;
+  }
+  if (fields.lastName && savedData.lastName) {
+    fields.lastName.value = savedData.lastName;
+  }
+  if (fields.dateOfBirth && savedData.dateOfBirth) {
+    fields.dateOfBirth.value = savedData.dateOfBirth;
+  }
+  if (fields.email && savedData.email) {
+    fields.email.value = savedData.email;
+  }
+  if (fields.password && savedData.password) {
+    fields.password.value = savedData.password;
+  }
+  if (fields.communicationViaEmail) {
+    fields.communicationViaEmail.checked = savedData.communicationViaEmail !== false;
+  }
+  if (fields.newsletterSignUp) {
+    fields.newsletterSignUp.checked = savedData.newsletterSignUp === true;
+  }
+  if (fields.privacyPolicy) {
+    fields.privacyPolicy.checked = savedData.privacyPolicy === true;
+  }
+}
+
+function setupFormAutoSave() {
+  const form = document.getElementById("signUpForm");
+  if (!form || form._autoSaveSetup) return;
+  
+  form._autoSaveSetup = true;
+
+  const fields = {
+    namePrefix: form.querySelector('select[name="namePrefix"]'),
+    firstName: form.querySelector('input[name="firstName"]'),
+    lastName: form.querySelector('input[name="lastName"]'),
+    dateOfBirth: form.querySelector('input[name="dateOfBirth"]'),
+    email: form.querySelector('input[name="email"]'),
+    password: form.querySelector('input[name="password"]'),
+    communicationViaEmail: form.querySelector('input[name="communication-via-email"]'),
+    newsletterSignUp: form.querySelector('input[name="newsletter-sign-up"]'),
+    privacyPolicy: form.querySelector('input[name="privacyPolicy"]'),
+  };
+
+  Object.entries(fields).forEach(([key, field]) => {
+    if (!field) return;
+
+    if (field.type === "checkbox") {
+      field.addEventListener("change", () => {
+        saveFormData({ [key]: field.checked });
+      });
+    } else {
+      field.addEventListener("input", () => {
+        saveFormData({ [key]: field.value });
+      });
+      field.addEventListener("change", () => {
+        saveFormData({ [key]: field.value });
+      });
+    }
+  });
+}
 /* -------------------- flow hooks -------------------- */
 function onboardingHook({ current, index }) {
   if (index === 0) {
@@ -150,9 +247,18 @@ function onboardingHook({ current, index }) {
     populateSummary();
   } else if (index === 4) {
     populateContraindications();
-    populateNamePrefix();
+    populateNamePrefix().then(() => {
+      setTimeout(() => {
+        restoreFormData();
+        setupFormAutoSave();
+      }, 100);
+    });
   } else if (index === 5) {
     populateCheckout();
+    setTimeout(() => {
+      restoreFormData();
+      setupFormAutoSave();
+    }, 100);
   }
 }
 
@@ -1367,6 +1473,8 @@ async function createUser() {
 
 async function populateNamePrefix() {
   const namePrefixSelect = document.querySelector('select[name="namePrefix"]');
+  if (!namePrefixSelect) return;
+  
   const response = await fetch(getNamePrefixes());
   const data = await response.json();
   const prefixes = data.data;
@@ -1381,6 +1489,8 @@ async function populateNamePrefix() {
     option.textContent = text;
     namePrefixSelect.appendChild(option);
   });
+  
+  return Promise.resolve();
 }
 
 /* -------------------- DOMContentLoaded -------------------- */
@@ -1400,7 +1510,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const errorMessageStep4 = document.getElementById("error_message_step4");
   const errorMessageStep5 = document.getElementById("error_message_step5");
 
-  let currentStep = 0;
+  let currentStep = getSavedCurrentStep();
   const stepMaps = {
     0: "#step1",
     1: "#step2",
@@ -1429,6 +1539,7 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
       console.error("Step index out of range:", index);
     }
+    saveCurrentStep(index);
     onboardingHook({ steps: steps, current: steps[index], index: index });
   }
 
@@ -1592,7 +1703,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (newsletterCheckbox) {
               formData.newsletterSignUp = newsletterCheckbox.checked;
             }
-            setToStorage("userData", formData);
+            saveFormData(formData);
             if (getFromStorage("trial", false)) {
               await createTrialUser();
               return;
