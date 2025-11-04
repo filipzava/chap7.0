@@ -175,18 +175,74 @@ function getUrlParameter(name) {
   return urlParams.get(name);
 }
 
-async function triggerFormSubmissionFlow() {
+function createFullscreenLoader() {
+  let loader = document.getElementById("fullscreen-loader");
+  if (loader) return loader;
+
+  loader = document.createElement("div");
+  loader.id = "fullscreen-loader";
+  loader.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+  `;
+
+  const spinner = document.createElement("div");
+  spinner.style.cssText = `
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 242, 54, 0.3);
+    border-top-color: #FFF236;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  `;
+
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  loader.appendChild(spinner);
+  document.body.appendChild(loader);
+  return loader;
+}
+
+function showFullscreenLoader() {
+  const loader = createFullscreenLoader();
+  loader.style.display = "flex";
+}
+
+function hideFullscreenLoader() {
+  const loader = document.getElementById("fullscreen-loader");
+  if (loader) {
+    loader.style.display = "none";
+  }
+}
+
+async function triggerFormSubmissionFlow(showLoader = false) {
   const form = document.getElementById("signUpForm");
   if (!form) {
     console.warn("Form not found, waiting...");
-    setTimeout(triggerFormSubmissionFlow, 500);
+    setTimeout(() => triggerFormSubmissionFlow(showLoader), 500);
     return;
   }
 
   const userData = getFromStorage("userData", {});
   if (!userData.email || !userData.firstName || !userData.lastName) {
     console.warn("Form data not complete, cannot auto-submit");
+    if (showLoader) hideFullscreenLoader();
     return;
+  }
+
+  if (showLoader) {
+    showFullscreenLoader();
   }
 
   const buttonText = getSubmitButtonText();
@@ -207,15 +263,16 @@ async function triggerFormSubmissionFlow() {
     saveFormData(formData);
 
     if (getFromStorage("trial", false)) {
-      await createTrialUser();
+      await createTrialUser(showLoader);
       return;
     }
 
     await createUser();
-    await ensureEmailVerifiedThenPay(calculateTotalPrice());
+    await ensureEmailVerifiedThenPay(calculateTotalPrice(), showLoader);
   } catch (error) {
     console.error("Auto-submit error:", error);
     setSubmitButtonLoading(false);
+    if (showLoader) hideFullscreenLoader();
   }
 }
 
@@ -1352,7 +1409,7 @@ function getUserIdSafe() {
   return null;
 }
 
-async function ensureEmailVerifiedThenPay(amount) {
+async function ensureEmailVerifiedThenPay(amount, showLoader = false) {
   const userId = getUserIdSafe();
   if (!userId) {
     console.error("No userId found for email verification.");
@@ -1362,15 +1419,19 @@ async function ensureEmailVerifiedThenPay(amount) {
       errDiv.textContent = "Unbekannter Fehler: Benutzer nicht gefunden.";
     }
     setSubmitButtonLoading(false);
+    if (showLoader) hideFullscreenLoader();
     return;
   }
 
   try {
     const verified = await apiIsEmailVerified(userId);
     if (verified) {
+      if (showLoader) hideFullscreenLoader();
       await doPayment(amount);
       return;
     }
+
+    if (showLoader) hideFullscreenLoader();
 
     wireEmailVerifyModal({
       userId,
@@ -1385,11 +1446,12 @@ async function ensureEmailVerifiedThenPay(amount) {
   } catch (error) {
     console.error("Email verification error:", error);
     setSubmitButtonLoading(false);
+    if (showLoader) hideFullscreenLoader();
     throw error;
   }
 }
 
-async function ensureEmailVerifiedThenCompleteTrial() {
+async function ensureEmailVerifiedThenCompleteTrial(showLoader = false) {
   const userId = getUserIdSafe();
   if (!userId) {
     console.error("No userId found for email verification.");
@@ -1399,12 +1461,14 @@ async function ensureEmailVerifiedThenCompleteTrial() {
       errDiv.textContent = "Unbekannter Fehler: Benutzer nicht gefunden.";
     }
     setSubmitButtonLoading(false);
+    if (showLoader) hideFullscreenLoader();
     return;
   }
 
   try {
     const verified = await apiIsEmailVerified(userId);
     if (verified) {
+      if (showLoader) hideFullscreenLoader();
       await completeOnboarding(userId, true);
       localStorage.removeItem("userId");
       window.location.href = window.location.href.replace(
@@ -1413,6 +1477,8 @@ async function ensureEmailVerifiedThenCompleteTrial() {
       );
       return;
     }
+
+    if (showLoader) hideFullscreenLoader();
 
     wireEmailVerifyModal({
       userId,
@@ -1432,6 +1498,7 @@ async function ensureEmailVerifiedThenCompleteTrial() {
   } catch (error) {
     console.error("Email verification error:", error);
     setSubmitButtonLoading(false);
+    if (showLoader) hideFullscreenLoader();
     throw error;
   }
 }
@@ -2216,7 +2283,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(async () => {
       const currentStep = getSavedCurrentStep();
       if (currentStep >= 5) {
-        await triggerFormSubmissionFlow();
+        await triggerFormSubmissionFlow(true);
       } else {
         const steps = document.querySelectorAll(
           ".form_step_wrap .form_step, .form_step_popup"
@@ -2225,7 +2292,7 @@ document.addEventListener("DOMContentLoaded", function () {
           const savedStep = getSavedCurrentStep();
           showStep(Math.max(5, savedStep));
           setTimeout(async () => {
-            await triggerFormSubmissionFlow();
+            await triggerFormSubmissionFlow(true);
           }, 1000);
         }
       }
@@ -2234,7 +2301,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 /* -------------------- trial user -------------------- */
-async function createTrialUser() {
+async function createTrialUser(showLoader = false) {
   try {
     const errorDiv = document.querySelector("#error_message_step5");
     errorDiv.style.display = "none";
@@ -2306,7 +2373,7 @@ async function createTrialUser() {
             disableFormFieldsIfUserExists();
             hidePasswordFieldsIfUserExists();
           }, 100);
-          await ensureEmailVerifiedThenCompleteTrial();
+          await ensureEmailVerifiedThenCompleteTrial(showLoader);
           return { userId: savedUserId, success: true, skippedCreation: true };
         }
         const errorDiv = document.querySelector("#error_message_step5");
@@ -2314,6 +2381,7 @@ async function createTrialUser() {
           errorDiv.style.display = "block";
           errorDiv.textContent = dictionary["error.userExistsNoLocal"];
         }
+        if (showLoader) hideFullscreenLoader();
         throw new Error(dictionary["error.userExistsNoLocal"]);
       }
 
@@ -2324,12 +2392,14 @@ async function createTrialUser() {
           data.error || ""
         }`.trim();
       }
+      if (showLoader) hideFullscreenLoader();
       throw new Error(
         data.message || data.error || "Failed to create trial user"
       );
     }
 
     if (!response.ok || !data.success) {
+      if (showLoader) hideFullscreenLoader();
       throw new Error(data.message || "Failed to create trial user");
     }
 
@@ -2341,11 +2411,12 @@ async function createTrialUser() {
       hidePasswordFieldsIfUserExists();
     }, 100);
 
-    await ensureEmailVerifiedThenCompleteTrial();
+    await ensureEmailVerifiedThenCompleteTrial(showLoader);
     return data;
   } catch (error) {
     setToStorage("createUserResponse", error);
     console.error("Error creating trial user:", error);
+    if (showLoader) hideFullscreenLoader();
     throw error;
   }
 }
