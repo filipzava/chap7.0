@@ -193,13 +193,28 @@ function restoreFormData() {
     fields.email.value = savedData.email;
   }
   if (fields.communicationViaEmail) {
-    fields.communicationViaEmail.checked = savedData.communicationViaEmail !== false;
+    const shouldBeChecked = savedData.communicationViaEmail !== false;
+    fields.communicationViaEmail.checked = shouldBeChecked;
+    if (shouldBeChecked) {
+      fields.communicationViaEmail.setAttribute("checked", "checked");
+      fields.communicationViaEmail.dispatchEvent(new Event("change", { bubbles: true }));
+    }
   }
   if (fields.newsletterSignUp) {
-    fields.newsletterSignUp.checked = savedData.newsletterSignUp === true;
+    const shouldBeChecked = savedData.newsletterSignUp === true;
+    fields.newsletterSignUp.checked = shouldBeChecked;
+    if (shouldBeChecked) {
+      fields.newsletterSignUp.setAttribute("checked", "checked");
+      fields.newsletterSignUp.dispatchEvent(new Event("change", { bubbles: true }));
+    }
   }
   if (fields.privacyPolicy) {
-    fields.privacyPolicy.checked = savedData.privacyPolicy === true;
+    const shouldBeChecked = savedData.privacyPolicy === true;
+    fields.privacyPolicy.checked = shouldBeChecked;
+    if (shouldBeChecked) {
+      fields.privacyPolicy.setAttribute("checked", "checked");
+      fields.privacyPolicy.dispatchEvent(new Event("change", { bubbles: true }));
+    }
   }
 }
 
@@ -413,6 +428,25 @@ function onboardingHook({ current, index }) {
       setTimeout(() => {
         clearPasswordField();
         restoreFormData();
+        
+        setTimeout(() => {
+          const form = document.getElementById("signUpForm");
+          if (form) {
+            const savedData = getFromStorage("userData", {});
+            const communicationCheckbox = form.querySelector('input[name="communication-via-email"]');
+            const privacyCheckbox = form.querySelector('input[name="privacyPolicy"]');
+            
+            if (communicationCheckbox && savedData.communicationViaEmail !== false) {
+              communicationCheckbox.checked = true;
+              communicationCheckbox.setAttribute("checked", "checked");
+            }
+            if (privacyCheckbox && savedData.privacyPolicy === true) {
+              privacyCheckbox.checked = true;
+              privacyCheckbox.setAttribute("checked", "checked");
+            }
+          }
+        }, 50);
+        
         setupFormAutoSave();
         setupPasswordFieldCleanup();
         hidePasswordFieldsIfUserExists();
@@ -1802,6 +1836,7 @@ document.addEventListener("DOMContentLoaded", function () {
           );
 
           const formData = {};
+          const checkboxFields = ["communicationViaEmail", "newsletterSignUp", "privacyPolicy"];
           Object.entries(fields).forEach(([key, field]) => {
             if (!field) {
               if (key === "password" && userId) {
@@ -1813,61 +1848,65 @@ document.addEventListener("DOMContentLoaded", function () {
               return;
             }
 
-            const value = field.value.trim();
-            formData[key] = value;
-
-            if (!value && !["communicationViaEmail", "newsletterSignUp", "privacyPolicy"].includes(key)) {
-              field.classList.add("error");
-              valid = false;
-              switch (key) {
-                case "namePrefix":
-                  errorMessages.push(dictionary["error.namePrefix"]);
-                  break;
-                case "firstName":
-                  errorMessages.push(dictionary["error.firstName"]);
-                  break;
-                case "lastName":
-                  errorMessages.push(dictionary["error.lastName"]);
-                  break;
-                case "dateOfBirth":
-                  errorMessages.push(dictionary["error.dateOfBirth"]);
-                  break;
-                case "email":
-                  errorMessages.push(dictionary["error.email"]);
-                  break;
-                case "password":
-                  if (!userId) {
-                    errorMessages.push(dictionary["error.password"]);
-                  }
-                  break;
-              }
-            }
-
-            if (key === "email" && value) {
-              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-              if (!emailRegex.test(value)) {
+            if (checkboxFields.includes(key)) {
+              formData[key] = field.checked;
+            } else {
+              const value = field.value.trim();
+              formData[key] = value;
+              
+              if (!value && !["communicationViaEmail", "newsletterSignUp", "privacyPolicy"].includes(key)) {
                 field.classList.add("error");
                 valid = false;
-                errorMessages.push(dictionary["error.emailInvalid"]);
+                switch (key) {
+                  case "namePrefix":
+                    errorMessages.push(dictionary["error.namePrefix"]);
+                    break;
+                  case "firstName":
+                    errorMessages.push(dictionary["error.firstName"]);
+                    break;
+                  case "lastName":
+                    errorMessages.push(dictionary["error.lastName"]);
+                    break;
+                  case "dateOfBirth":
+                    errorMessages.push(dictionary["error.dateOfBirth"]);
+                    break;
+                  case "email":
+                    errorMessages.push(dictionary["error.email"]);
+                    break;
+                  case "password":
+                    if (!userId) {
+                      errorMessages.push(dictionary["error.password"]);
+                    }
+                    break;
+                }
               }
-            }
 
-            if (key === "password" && value && value.length < 6 && !userId) {
-              field.classList.add("error");
-              valid = false;
-              errorMessages.push(dictionary["error.passwordLength"]);
-            }
+              if (key === "email" && value) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(value)) {
+                  field.classList.add("error");
+                  valid = false;
+                  errorMessages.push(dictionary["error.emailInvalid"]);
+                }
+              }
 
-            if (key === "dateOfBirth" && value) {
-              const date = new Date(value);
-              const today = new Date();
-              const minAge = 18;
-              const minDate = new Date();
-              minDate.setFullYear(today.getFullYear() - minAge);
-              if (isNaN(date.getTime()) || date > today || date > minDate) {
+              if (key === "password" && value && value.length < 6 && !userId) {
                 field.classList.add("error");
                 valid = false;
-                errorMessages.push(dictionary["error.ageRestriction"]);
+                errorMessages.push(dictionary["error.passwordLength"]);
+              }
+
+              if (key === "dateOfBirth" && value) {
+                const date = new Date(value);
+                const today = new Date();
+                const minAge = 18;
+                const minDate = new Date();
+                minDate.setFullYear(today.getFullYear() - minAge);
+                if (isNaN(date.getTime()) || date > today || date > minDate) {
+                  field.classList.add("error");
+                  valid = false;
+                  errorMessages.push(dictionary["error.ageRestriction"]);
+                }
               }
             }
 
