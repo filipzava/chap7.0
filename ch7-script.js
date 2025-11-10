@@ -50,6 +50,7 @@ const PUBLISHABLE_KEY =
   "pk_test_51QPhSmIjMlCwpKLpOSWig7J6FCQyFQ5NEysG3mXGy5tzXfZ61wwdGDSU2m6qPO8QwWeUMokteES3SyTUJlqJF6JP00zRyrYPId";
 
 API = "https://europe-west3-preneo-production.cloudfunctions.net";
+const API_URL = API;
 
 let stripe;
 
