@@ -1638,7 +1638,7 @@ async function doPayment(amount, showLoader = false) {
 
     setToStorage("paymentIntentPayload", body);
     const response = await fetch(
-      "https://europe-west3-mind-c3055.cloudfunctions.net/createPaymentIntent",
+      "https://europe-west3-preneo-production.cloudfunctions.net/createPaymentIntent",
       {
         method: "POST",
         body: JSON.stringify(body),
