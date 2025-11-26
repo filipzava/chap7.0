@@ -420,27 +420,22 @@ function clearPasswordField() {
 
   const passwordField = form.querySelector('input[name="password"]');
   const passwordConfirmField = form.querySelector('input[name="passwordConfirm"]');
+  const allPasswordInputs = form.querySelectorAll('input[type="password"]');
+
+  allPasswordInputs.forEach((input) => {
+    input.value = "";
+    input.autocomplete = "new-password";
+    input.setAttribute("data-lpignore", "true");
+    input.setAttribute("data-form-type", "other");
+    input.setAttribute("autocomplete", "new-password");
+  });
 
   if (passwordField) {
-    passwordField.value = "";
-    passwordField.autocomplete = "new-password";
-    passwordField.setAttribute("data-lpignore", "true");
-    passwordField.setAttribute("data-form-type", "other");
-    passwordField.setAttribute("autocomplete", "new-password");
-    
     const savedData = getFromStorage("userData", {});
     if (savedData.password) {
       delete savedData.password;
       setToStorage("userData", savedData);
     }
-  }
-
-  if (passwordConfirmField) {
-    passwordConfirmField.value = "";
-    passwordConfirmField.autocomplete = "new-password";
-    passwordConfirmField.setAttribute("data-lpignore", "true");
-    passwordConfirmField.setAttribute("data-form-type", "other");
-    passwordConfirmField.setAttribute("autocomplete", "new-password");
   }
 }
 
