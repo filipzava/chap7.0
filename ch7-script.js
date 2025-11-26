@@ -2330,9 +2330,9 @@ document.addEventListener("DOMContentLoaded", function () {
   if (backToOnboarding) {
     backToOnboarding.addEventListener("click", (event) => {
       event.preventDefault();
-      localStorage.removeItem("userData");
-      currentStep = 3;
-      saveCurrentStep(3);
+      clearLocalStorageAfterPayment();
+      currentStep = 0;
+      saveCurrentStep(0);
       showStep(currentStep);
     });
   }
