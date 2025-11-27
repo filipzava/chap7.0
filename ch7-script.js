@@ -1063,6 +1063,14 @@ function fillSummaryData() {
       getFromStorage("selectedCourses", []).length === 1 ? "12" : "18";
   }
 
+  const explainerMonthDisplayer = document.querySelector(
+    "#explainer-month-displayer"
+  );
+  if (explainerMonthDisplayer) {
+    const selectedCoursesCount = getFromStorage("selectedCourses", []).length;
+    explainerMonthDisplayer.textContent = selectedCoursesCount === 2 ? "18" : "12";
+  }
+
   const trialButton = document.querySelector("#button_trial");
   if (trialButton) {
     trialButton.addEventListener("click", () => setToStorage("trial", true));
