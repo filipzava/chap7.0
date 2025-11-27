@@ -773,7 +773,6 @@ function populateDropdown(providers, { dropdown, disclaimer }) {
 
   async function handleDropdownChange(e) {
     const selectedProvider = e.target.value || "";
-    setToStorage("selectedHealthProvider", selectedProvider);
 
     if (disclaimer) {
       disclaimer.style.visibility = selectedProvider ? "visible" : "hidden";
@@ -2066,6 +2065,8 @@ document.addEventListener("DOMContentLoaded", function () {
           ) {
             valid = false;
             errorMessages.push(dictionary["error.healthProvider"]);
+          } else if (valid) {
+            setToStorage("selectedHealthProvider", dropdown.value.trim());
           }
           break;
         }
