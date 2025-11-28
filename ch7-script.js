@@ -47,7 +47,7 @@ const dictionary = {
 
 
 const PUBLISHABLE_KEY =
-  "pk_live_51QPhSmIjMlCwpKLp1WUFFigtGme2DlhNm5Q92hVgaOXZ9LykdGitlL5TV4PyaMjO2rJcG2T22G5bdCYCis5KwnQs00AcDCV5VD";
+  "pk_test_51QPhSmIjMlCwpKLpOSWig7J6FCQyFQ5NEysG3mXGy5tzXfZ61wwdGDSU2m6qPO8QwWeUMokteES3SyTUJlqJF6JP00zRyrYPId";
 
 API = "https://europe-west3-preneo-production.cloudfunctions.net";
 const API_URL = API;
