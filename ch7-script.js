@@ -105,16 +105,29 @@ function setSubmitButtonLoading(loading) {
 }
 
 function setPaymentModalSizing(wrapper, container) {
-  const target = `${PAYMENT_MODAL_HEIGHT}px`;
+  const viewportHeight = window.innerHeight || PAYMENT_MODAL_HEIGHT;
+  const computedHeight = Math.max(
+    320,
+    Math.min(PAYMENT_MODAL_HEIGHT, viewportHeight - 64)
+  );
+  const target = `${computedHeight}px`;
   if (wrapper) {
     wrapper.style.alignItems = "center";
     wrapper.style.justifyContent = "center";
+    wrapper.style.minHeight = "100vh";
+    wrapper.style.padding = "32px 16px";
+    wrapper.style.boxSizing = "border-box";
+    wrapper.style.overflowY = "auto";
   }
   if (container) {
     container.style.height = target;
     container.style.maxHeight = target;
     container.style.minHeight = target;
+    container.style.width = "min(420px, calc(100vw - 32px))";
+    container.style.margin = "0 auto";
     container.style.overflowY = "auto";
+    container.style.background = container.style.background || "#fff";
+    container.style.borderRadius = container.style.borderRadius || "16px";
   }
 }
 
