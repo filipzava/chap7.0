@@ -40,6 +40,8 @@ const dictionary = {
   "success.registration": "Registrierung erfolgreich",
   "success.payment": "Zahlung erfolgreich",
   "success.invoice": "Rechnung wurde erstellt und per E-Mail versandt",
+  "success.sepaProcessing":
+    "Ihre SEPA-Zahlung wird verarbeitet. Sie erhalten eine Bestätigung per E-Mail.",
   "button.closePayment": "Zahlungsfenster schließen",
   "error.userExistsNoLocal":
     "Dieser Benutzer existiert bereits. Bitte beende die Einrichtung in der mobilen App",
@@ -1877,11 +1879,19 @@ async function doPayment(amount, showLoader = false) {
             console.error("Payment failed:", error);
             errorDiv.style.display = "block";
             errorDiv.textContent = error.message;
-          } else if (paymentIntent && paymentIntent.status === "succeeded") {
+          } else if (
+            paymentIntent &&
+            (paymentIntent.status === "succeeded" ||
+              paymentIntent.status === "processing")
+          ) {
+            const isProcessing = paymentIntent.status === "processing";
+            const isSucceeded = paymentIntent.status === "succeeded";
+
             setToStorage("paymentSuccess", {
               paymentIntentId: paymentIntent.id,
               amount: amount,
               timestamp: new Date().toISOString(),
+              status: paymentIntent.status,
             });
 
             const userId = getFromStorage("createUserResponse", {}).userId;
@@ -1901,11 +1911,17 @@ async function doPayment(amount, showLoader = false) {
               purchaseBtn.classList.add("disabled");
               purchaseBtn.setAttribute("aria-disabled", "true");
             }
-            console.log("functions started");
-            await handlePurchaseAndInvoice(paymentIntent.id, amount, userId);
-            await sendWelcomeEmail(userId, programSlugs);
-            await completeOnboarding(userId);
-            console.log("functions completed");
+
+            if (isSucceeded) {
+              console.log("functions started");
+              await handlePurchaseAndInvoice(paymentIntent.id, amount, userId);
+              await sendWelcomeEmail(userId, programSlugs);
+              await completeOnboarding(userId);
+              console.log("functions completed");
+            } else if (isProcessing) {
+              console.log("SEPA payment processing - finalization via webhook");
+            }
+
             if (showLoader) hideFullscreenLoader();
             clearLocalStorageAfterPayment();
             window.location.href = window.location.href.replace(
