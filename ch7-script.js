@@ -112,12 +112,15 @@ function setPaymentModalSizing(wrapper, container) {
   );
   const target = `${computedHeight}px`;
   if (wrapper) {
+    wrapper.style.position = "fixed";
+    wrapper.style.inset = "0";
     wrapper.style.alignItems = "center";
     wrapper.style.justifyContent = "center";
-    wrapper.style.minHeight = "100vh";
     wrapper.style.padding = "32px 16px";
     wrapper.style.boxSizing = "border-box";
-    wrapper.style.overflowY = "auto";
+    wrapper.style.overflow = "hidden";
+    wrapper.style.zIndex = "10000";
+    wrapper.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
   }
   if (container) {
     container.style.height = target;
@@ -126,8 +129,18 @@ function setPaymentModalSizing(wrapper, container) {
     container.style.width = "min(420px, calc(100vw - 32px))";
     container.style.margin = "0 auto";
     container.style.overflowY = "auto";
+    container.style.overflowX = "hidden";
     container.style.background = container.style.background || "#fff";
     container.style.borderRadius = container.style.borderRadius || "16px";
+    container.style.position = "relative";
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+  }
+  const paymentElement = document.getElementById("payment_element");
+  if (paymentElement) {
+    paymentElement.style.maxHeight = "100%";
+    paymentElement.style.overflowY = "auto";
+    paymentElement.style.overflowX = "hidden";
   }
 }
 
@@ -1762,12 +1775,45 @@ async function doPayment(amount, showLoader = false) {
       ".btn_main_text"
     );
 
-    paymentElement.mount("#payment_element");
-
     const paymentGatewayContainer = document.querySelector(
       ".payment_gateway_contain"
     );
     setPaymentModalSizing(popupWrap, paymentGatewayContainer);
+
+    paymentElement.mount("#payment_element");
+
+    setTimeout(() => {
+      setPaymentModalSizing(popupWrap, paymentGatewayContainer);
+      const paymentEl = document.getElementById("payment_element");
+      if (paymentEl) {
+        const stripeForm = paymentEl.querySelector("form");
+        if (stripeForm) {
+          stripeForm.style.maxHeight = "100%";
+          stripeForm.style.overflowY = "auto";
+        }
+      }
+    }, 500);
+
+    let paymentObserver = null;
+    if (paymentGatewayContainer) {
+      paymentObserver = new MutationObserver(() => {
+        setPaymentModalSizing(popupWrap, paymentGatewayContainer);
+        const paymentEl = document.getElementById("payment_element");
+        if (paymentEl) {
+          const stripeForm = paymentEl.querySelector("form");
+          if (stripeForm) {
+            stripeForm.style.maxHeight = "100%";
+            stripeForm.style.overflowY = "auto";
+          }
+        }
+      });
+
+      paymentObserver.observe(paymentGatewayContainer, {
+        childList: true,
+        subtree: true,
+        attributes: false
+      });
+    }
     let closePaymentLink = document.getElementById("close_payment_window");
     if (!closePaymentLink && paymentGatewayContainer) {
       const wrapper = document.createElement("div");
@@ -1783,6 +1829,9 @@ async function doPayment(amount, showLoader = false) {
     if (closePaymentLink) {
       closePaymentLink.onclick = (e) => {
         e.preventDefault();
+        if (paymentObserver) {
+          paymentObserver.disconnect();
+        }
         popupWrap.classList.remove("active");
         popupWrap.style.display = "none";
         setSubmitButtonLoading(false);
