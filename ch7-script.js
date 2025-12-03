@@ -1351,9 +1351,8 @@ function ensureEmailVerifyModalExists() {
       <div class="evm-card" style="max-width:600px;width:92%;background:#fff;border-radius:16px;padding:24px 24px 18px;box-shadow:0 16px 40px rgba(0,0,0,.2);">
         <h2 style="margin:0 0 14px 0;font-size:30px;line-height:1.2;color:#13223b;">E-Mail bestätigen</h2>
         <p id="evm_text" style="margin:0 0 12px 0;line-height:1.55;color:#1f2937;font-size:16px;">
-          Bitte klicken Sie auf <strong>„Bestätigungslink senden“</strong>, öffnen Sie den Link in Ihrer E-Mail
-          und kehren Sie anschließend in diese Browser-Registerkarte zurück. Danach klicken Sie auf
-          <strong>„Bestätigung prüfen“</strong>.
+          Bitte klicken Sie auf <strong>„Bestätigungslink senden"</strong>, öffnen Sie den Link in Ihrer E-Mail
+          und kehren Sie anschließend in diese Browser-Registerkarte zurück.
         </p>
 
         <div id="evm_error" style="display:none;margin:10px 0 6px;color:#b91c1c;font-size:14px;"></div>
@@ -1371,9 +1370,6 @@ function ensureEmailVerifyModalExists() {
         <div id="evm_actions_after_send" style="display:none;gap:10px;flex-wrap:wrap;margin-top:12px;">
           <button id="evm_resend" style="padding:10px 14px;border-radius:10px;border:1px solid #111827;background:#111827;color:#fff;cursor:pointer;">
             Nochmals senden
-          </button>
-          <button id="evm_check" style="padding:10px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;color:#111827;cursor:pointer;">
-            Bestätigung prüfen
           </button>
           <button id="evm_close" style="margin-left:auto;padding:10px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;color:#111827;cursor:pointer;">
             Schließen
@@ -1439,7 +1435,7 @@ function startResendCountdown(btn, seconds = 60) {
 function wireEmailVerifyModal({ userId, onVerified }) {
   const m = ensureEmailVerifyModalExists();
 
-  ["evm_send", "evm_cancel", "evm_resend", "evm_check", "evm_close"].forEach(
+  ["evm_send", "evm_cancel", "evm_resend", "evm_close"].forEach(
     (id) => {
       const el = m.querySelector(`#${id}`);
       if (el) {
@@ -1452,7 +1448,6 @@ function wireEmailVerifyModal({ userId, onVerified }) {
   const btnSend = m.querySelector("#evm_send");
   const btnCancel = m.querySelector("#evm_cancel");
   const btnResend = m.querySelector("#evm_resend");
-  const btnCheck = m.querySelector("#evm_check");
   const btnClose = m.querySelector("#evm_close");
 
   const errBox = m.querySelector("#evm_error");
@@ -1514,25 +1509,6 @@ function wireEmailVerifyModal({ userId, onVerified }) {
 
     showOk("Link erneut gesendet.");
     startResendCountdown(btnResend, 60);
-  });
-
-  btnCheck.addEventListener("click", async () => {
-    btnCheck.disabled = true;
-    showErr("");
-    showOk("Prüfe Bestätigung…");
-
-    const verified = await apiIsEmailVerified(userId);
-    btnCheck.disabled = false;
-
-    if (verified) {
-      showOk("E-Mail wurde bestätigt. Es geht weiter zur Zahlung …");
-      hideEmailVerifyModal();
-      if (typeof onVerified === "function") onVerified();
-    } else {
-      showErr(
-        "E-Mail ist noch nicht bestätigt. Bitte klicken Sie auf den Link in Ihrer E-Mail und versuchen Sie es erneut."
-      );
-    }
   });
 
   btnCancel.addEventListener("click", () => {
