@@ -147,6 +147,37 @@ function setPaymentModalSizing(wrapper, container) {
     paymentElement.style.overflowX = "hidden";
     paymentElement.style.flex = "1";
     paymentElement.style.minHeight = "0";
+    
+    const stripeForm = paymentElement.querySelector("form");
+    if (stripeForm) {
+      stripeForm.style.maxHeight = "100%";
+      stripeForm.style.overflowY = "auto";
+      stripeForm.style.overflowX = "visible";
+      stripeForm.style.padding = "0";
+      stripeForm.style.margin = "0";
+    }
+    
+    const paypalContainers = paymentElement.querySelectorAll('[class*="paypal"], [id*="paypal"], [class*="PayPal"], [id*="PayPal"]');
+    paypalContainers.forEach(el => {
+      el.style.width = "100%";
+      el.style.minHeight = "200px";
+      el.style.display = "block";
+      el.style.overflow = "visible";
+    });
+    
+    const iframes = paymentElement.querySelectorAll("iframe");
+    iframes.forEach(iframe => {
+      iframe.style.width = "100%";
+      iframe.style.minHeight = "200px";
+      iframe.style.border = "none";
+      iframe.style.display = "block";
+    });
+    
+    const paymentMethodsContainer = paymentElement.querySelector('[class*="PaymentMethod"], [data-payment-methods]');
+    if (paymentMethodsContainer) {
+      paymentMethodsContainer.style.width = "100%";
+      paymentMethodsContainer.style.overflow = "visible";
+    }
   }
 }
 
@@ -1778,40 +1809,62 @@ async function doPayment(amount, showLoader = false) {
 
     paymentElement.mount("#payment_element");
 
+    const updatePaymentMethodStyles = () => {
+      const paymentEl = document.getElementById("payment_element");
+      if (!paymentEl) return;
+      
+      const stripeForm = paymentEl.querySelector("form");
+      if (stripeForm) {
+        stripeForm.style.maxHeight = "100%";
+        stripeForm.style.overflowY = "auto";
+        stripeForm.style.overflowX = "visible";
+        stripeForm.style.padding = "0";
+        stripeForm.style.margin = "0";
+      }
+      
+      const paypalElements = paymentEl.querySelectorAll('div[role="button"], iframe[title*="PayPal"], [class*="paypal"], [class*="PayPal"]');
+      paypalElements.forEach(el => {
+        el.style.width = "100%";
+        el.style.display = "block";
+        el.style.visibility = "visible";
+        el.style.opacity = "1";
+        if (el.tagName === "IFRAME") {
+          el.style.minHeight = "200px";
+          el.style.border = "none";
+        }
+      });
+      
+      const iframes = paymentEl.querySelectorAll("iframe");
+      iframes.forEach(iframe => {
+        iframe.style.width = "100%";
+        iframe.style.minHeight = "200px";
+        iframe.style.border = "none";
+        iframe.style.display = "block";
+        iframe.style.visibility = "visible";
+      });
+    };
+
     setTimeout(() => {
       setPaymentModalSizing(popupWrap, paymentGatewayContainer);
-      const paymentEl = document.getElementById("payment_element");
-      if (paymentEl) {
-        const stripeForm = paymentEl.querySelector("form");
-        if (stripeForm) {
-          stripeForm.style.maxHeight = "100%";
-          stripeForm.style.overflowY = "auto";
-          stripeForm.style.padding = "0";
-          stripeForm.style.margin = "0";
-        }
-      }
+      updatePaymentMethodStyles();
     }, 500);
+
+    setTimeout(() => {
+      updatePaymentMethodStyles();
+    }, 1000);
 
     let paymentObserver = null;
     if (paymentGatewayContainer) {
       paymentObserver = new MutationObserver(() => {
         setPaymentModalSizing(popupWrap, paymentGatewayContainer);
-        const paymentEl = document.getElementById("payment_element");
-        if (paymentEl) {
-          const stripeForm = paymentEl.querySelector("form");
-          if (stripeForm) {
-            stripeForm.style.maxHeight = "100%";
-            stripeForm.style.overflowY = "auto";
-            stripeForm.style.padding = "0";
-            stripeForm.style.margin = "0";
-          }
-        }
+        updatePaymentMethodStyles();
       });
 
       paymentObserver.observe(paymentGatewayContainer, {
         childList: true,
         subtree: true,
-        attributes: false
+        attributes: true,
+        attributeFilter: ['style', 'class']
       });
     }
     let closePaymentLink = document.getElementById("close_payment_window");
