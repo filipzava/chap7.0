@@ -1369,6 +1369,7 @@ async function apiSendVerifyEmail(userId) {
 /* ---------- modal (create/show/hide) ---------- */
 
 let EVM_INTERVAL = null;
+let EVM_POLLING_INTERVAL = null;
 
 function ensureEmailVerifyModalExists() {
   let modal = document.getElementById("email_verify_modal");
@@ -1436,6 +1437,11 @@ function hideEmailVerifyModal() {
     clearInterval(EVM_INTERVAL);
     EVM_INTERVAL = null;
   }
+  
+  if (EVM_POLLING_INTERVAL) {
+    clearInterval(EVM_POLLING_INTERVAL);
+    EVM_POLLING_INTERVAL = null;
+  }
 }
 
 /* ---------- countdown helper ---------- */
@@ -1459,6 +1465,32 @@ function startResendCountdown(btn, seconds = 60) {
     }
     setLabel(seconds);
   }, 1000);
+}
+
+/* ---------- email verification polling ---------- */
+
+function startEmailVerificationPolling(userId, onVerified) {
+  if (EVM_POLLING_INTERVAL) {
+    clearInterval(EVM_POLLING_INTERVAL);
+  }
+  
+  EVM_POLLING_INTERVAL = setInterval(async () => {
+    try {
+      const verified = await apiIsEmailVerified(userId);
+      if (verified) {
+        if (EVM_POLLING_INTERVAL) {
+          clearInterval(EVM_POLLING_INTERVAL);
+          EVM_POLLING_INTERVAL = null;
+        }
+        hideEmailVerifyModal();
+        if (typeof onVerified === "function") {
+          onVerified();
+        }
+      }
+    } catch (error) {
+      console.error("Email verification polling error:", error);
+    }
+  }, 3000);
 }
 
 /* ---------- wire modal logic ---------- */
@@ -1522,6 +1554,7 @@ function wireEmailVerifyModal({ userId, onVerified, onCancel }) {
       "Link gesendet. Öffnen Sie die E-Mail und klicken Sie auf den Link."
     );
     startResendCountdown(btnResend, 60);
+    startEmailVerificationPolling(userId, onVerified);
   });
 
   btnResend.addEventListener("click", async () => {
@@ -1540,6 +1573,7 @@ function wireEmailVerifyModal({ userId, onVerified, onCancel }) {
 
     showOk("Link erneut gesendet.");
     startResendCountdown(btnResend, 60);
+    startEmailVerificationPolling(userId, onVerified);
   });
 
   const handleCancel = () => {
