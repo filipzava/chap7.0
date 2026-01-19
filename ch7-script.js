@@ -1641,7 +1641,7 @@ async function ensureEmailVerifiedThenPay(amount, showLoader = false) {
     wireEmailVerifyModal({
       userId,
       onVerified: () => {
-        doPayment(amount, showLoader);
+        doPayment(amount, true);
       },
       onCancel: () => {
         setSubmitButtonLoading(false);
@@ -1780,6 +1780,7 @@ async function completeOnboarding(userId, isTrial = false) {
 async function doPayment(amount, showLoader = false) {
   try {
     setSubmitButtonLoading(true);
+    showFullscreenLoader();
     const errorDiv = document.querySelector("#error_message_payment");
 
     if (!stripe) await initializeStripe();
@@ -1821,8 +1822,6 @@ async function doPayment(amount, showLoader = false) {
 
     const paymentElement = elements.create("payment");
 
-    if (showLoader) hideFullscreenLoader();
-
     const popupWrap = document.querySelector("#payment_popup_wrapper");
     popupWrap.classList.add("active");
     popupWrap.style.display = "flex";
@@ -1842,6 +1841,10 @@ async function doPayment(amount, showLoader = false) {
     setPaymentModalSizing(popupWrap, paymentGatewayContainer);
 
     paymentElement.mount("#payment_element");
+    
+    setTimeout(() => {
+      hideFullscreenLoader();
+    }, 300);
 
     const updatePaymentMethodStyles = () => {
       const paymentEl = document.getElementById("payment_element");
@@ -2039,7 +2042,7 @@ async function doPayment(amount, showLoader = false) {
   } catch (error) {
     console.error(dictionary["error.payment"], error);
     setSubmitButtonLoading(false);
-    if (showLoader) hideFullscreenLoader();
+    hideFullscreenLoader();
     throw error;
   }
 }
