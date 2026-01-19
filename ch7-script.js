@@ -254,6 +254,12 @@ function getUrlParameter(name) {
   return urlParams.get(name);
 }
 
+function removeUrlParameter(name) {
+  const url = new URL(window.location.href);
+  url.searchParams.delete(name);
+  window.history.replaceState({}, "", url.toString());
+}
+
 function createFullscreenLoader() {
   let loader = document.getElementById("fullscreen-loader");
   if (loader) return loader;
@@ -2586,6 +2592,7 @@ document.addEventListener("DOMContentLoaded", function () {
   if (backToOnboarding) {
     backToOnboarding.addEventListener("click", (event) => {
       event.preventDefault();
+      removeUrlParameter("email-verified");
       clearLocalStorageAfterPayment();
       resetSignupFormState();
       resetCheckoutView();
